@@ -1,0 +1,5 @@
+crewai
+langchain-google-genai
+pydantic
+python-dotenv
+PyPDF2
