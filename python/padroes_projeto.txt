@@ -1,0 +1,28 @@
+# PADRÕES E DIRETRIZES DE ARQUITETURA OBRIGATÓRIAS
+# O Agente Desenvolvedor e o Engenheiro de QA lerão este arquivo antes de gerar o código.
+
+[REGRA DE OURO]
+Você DEVE espelhar estritamente a arquitetura de projeto já existente do cliente ("cac-api" para backend e "cac-front" para frontend). Nunca use TypeScript, use sempre JavaScript.
+
+[BACKEND - NODE.JS (Estilo cac-api)]
+- Linguagem: JavaScript Puro (ES Modules, import/export).
+- Framework: Express.js (v5).
+- Banco / ORM: Sequelize.
+- Estrutura de Pastas (MVC):
+  - src/server.js (import config, middleware)
+  - src/routes/index.js (OBRIGATÓRIO: Agrupa todas as rotas exportando uma função Routes(app) que recebe o router central e injeta os arquivos individuais, ex: `import empresaRoute from './empresaRoute.js'; empresaRoute(router);`)
+  - src/routes/arquivos.js (Exporta uma função padrão `export default (app) => { app.get('/rota', controller.get) }`)
+  - src/controllers/ (Padrão: const get = async (req, res) => { const id = req.params.id; ... return res.status(200).send({ message: 'sucesso', data: response }) }. Exportar como objeto default no final: `export default { get, persist, destroy }`)
+  - src/models/ (Modelos Sequelize)
+- Ao criar o código, comece com 'backend/'.
+
+[FRONTEND - NEXT.JS (Estilo cac-front)]
+- Linguagem: JavaScript (React 19). ZERO TypeScript.
+- Framework: Next.js App Router (pasta src/app/).
+- Estilização: TailwindCSS v4.
+- Componentes e Páginas: As páginas de CRUD devem usar `"use client";` no topo, importar `useState`, `useEffect`, usar `api` de `@/utils/axios`, e utilizar um design focado em estado (ex: modal de edição, tabela).
+- Requisições: Use a biblioteca axios via uma utilitária `@/utils/axios`.
+- Ao criar o código, comece com 'frontend/'.
+
+[TESTES E QA]
+- Escreva todos os arquivos de teste em JavaScript puro (.js, .jsx).

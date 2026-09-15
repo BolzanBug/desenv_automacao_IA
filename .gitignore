@@ -1,2 +1,10 @@
 .env
 venv/
+__pycache__/
+.postgres_data/
+artefatos/backend/node_modules/
+artefatos/backend/uploads/*
+!artefatos/backend/uploads/.gitkeep
+artefatos/frontend/node_modules/
+artefatos/frontend/.next/
+.DS_Store

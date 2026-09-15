@@ -1,0 +1,27 @@
+{
+  "name": "pollen-gestao-afiliados",
+  "version": "2.0.0",
+  "description": "Sistema Integrado de Gestão de Afiliados, Contratos, Finanças e Espaços Físicos - Pollen Parque Científico e Tecnológico",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev:backend": "cd artefatos/backend && npm run dev",
+    "dev:frontend": "cd artefatos/frontend && npm run dev",
+    "start:backend": "cd artefatos/backend && npm start",
+    "start:frontend": "cd artefatos/frontend && npm start",
+    "build:frontend": "cd artefatos/frontend && npm run build",
+    "test": "node scripts/run-all-tests.js",
+    "db:setup": "node scripts/setup-db.js",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "keywords": [
+    "pollen-parque",
+    "afiliados",
+    "nextjs",
+    "express",
+    "postgresql",
+    "sequelize"
+  ]
+}
+
