@@ -64,7 +64,7 @@ const sendEmail = async (req, res) => {
       }
     });
   } catch (error) {
-    return res.status(500).send({ message: 'Erro ao consultar histórico', error: error.message });
+    return res.status(500).send({ message: 'Erro ao disparar comunicação', error: error.message });
   }
 };
 

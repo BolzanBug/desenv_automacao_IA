@@ -21,7 +21,8 @@ export default function Routes(app) {
   publicRoute(router);
 
   app.use('/api/v1', router);
-  // Alias compatível para /api
+  // Alias compatíveis
   app.use('/api', router);
+  app.use('/', router);
 }
 

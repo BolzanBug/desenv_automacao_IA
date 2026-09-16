@@ -30,6 +30,20 @@ const publicRegister = async (req, res) => {
       });
     }
 
+    if (tipo !== 'INTERNACIONAL' && !cnpj) {
+      return res.status(400).send({
+        message: 'CNPJ é obrigatório para empresas nacionais.',
+        data: null
+      });
+    }
+
+    if (tipo === 'INTERNACIONAL' && !identificadorInternacional) {
+      return res.status(400).send({
+        message: 'Identificador internacional é obrigatório para empresas internacionais.',
+        data: null
+      });
+    }
+
     if (cnpj) {
       const existe = await Empresa.findOne({ where: { cnpj } });
       if (existe) {

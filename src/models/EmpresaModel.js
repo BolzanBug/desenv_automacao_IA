@@ -1,12 +1,5 @@
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../config/database.js';
-import ContratoMinuta from './ContratoMinutaModel.js';
-import AssinaturaContrato from './AssinaturaContratoModel.js';
-import FaturaFinanceira from './FaturaFinanceiraModel.js';
-import DocumentoAnexo from './DocumentoAnexoModel.js';
-import EspacoFisico from './EspacoFisicoModel.js';
-import ComunicacaoHistorico from './ComunicacaoHistoricoModel.js';
-import AuditoriaLog from './AuditoriaLogModel.js';
 
 const Empresa = sequelize.define('empresas', {
   id: {
@@ -142,46 +135,75 @@ const Empresa = sequelize.define('empresas', {
 });
 
 // Relacionamentos declarados no próprio Model
-Empresa.hasMany(ContratoMinuta, {
-  as: 'contratos',
-  foreignKey: { name: 'empresaId', field: 'empresa_id' },
-  onDelete: 'CASCADE'
-});
+const defineEmpresaAssociations = () => {
+  const ContratoMinuta = sequelize.models.contratos_minutas;
+  const AssinaturaContrato = sequelize.models.assinaturas_contrato;
+  const FaturaFinanceira = sequelize.models.faturas_financeiras;
+  const DocumentoAnexo = sequelize.models.documentos_anexos;
+  const EspacoFisico = sequelize.models.espacos_fisicos;
+  const ComunicacaoHistorico = sequelize.models.comunicacoes_historico;
+  const AuditoriaLog = sequelize.models.auditoria_logs;
 
-Empresa.hasMany(AssinaturaContrato, {
-  as: 'assinaturas',
-  foreignKey: { name: 'empresaId', field: 'empresa_id' },
-  onDelete: 'CASCADE'
-});
+  if (ContratoMinuta && !Empresa.associations.contratos) {
+    Empresa.hasMany(ContratoMinuta, {
+      as: 'contratos',
+      foreignKey: { name: 'empresaId', field: 'empresa_id' },
+      onDelete: 'CASCADE'
+    });
+  }
 
-Empresa.hasMany(FaturaFinanceira, {
-  as: 'faturas',
-  foreignKey: { name: 'empresaId', field: 'empresa_id' },
-  onDelete: 'CASCADE'
-});
+  if (AssinaturaContrato && !Empresa.associations.assinaturas) {
+    Empresa.hasMany(AssinaturaContrato, {
+      as: 'assinaturas',
+      foreignKey: { name: 'empresaId', field: 'empresa_id' },
+      onDelete: 'CASCADE'
+    });
+  }
 
-Empresa.hasMany(DocumentoAnexo, {
-  as: 'documentos',
-  foreignKey: { name: 'empresaId', field: 'empresa_id' },
-  onDelete: 'CASCADE'
-});
+  if (FaturaFinanceira && !Empresa.associations.faturas) {
+    Empresa.hasMany(FaturaFinanceira, {
+      as: 'faturas',
+      foreignKey: { name: 'empresaId', field: 'empresa_id' },
+      onDelete: 'CASCADE'
+    });
+  }
 
-Empresa.hasMany(EspacoFisico, {
-  as: 'espacos',
-  foreignKey: { name: 'empresaId', field: 'empresa_id' },
-  onDelete: 'SET NULL'
-});
+  if (DocumentoAnexo && !Empresa.associations.documentos) {
+    Empresa.hasMany(DocumentoAnexo, {
+      as: 'documentos',
+      foreignKey: { name: 'empresaId', field: 'empresa_id' },
+      onDelete: 'CASCADE'
+    });
+  }
 
-Empresa.hasMany(ComunicacaoHistorico, {
-  as: 'comunicacoes',
-  foreignKey: { name: 'empresaId', field: 'empresa_id' },
-  onDelete: 'SET NULL'
-});
+  if (EspacoFisico && !Empresa.associations.espacos) {
+    Empresa.hasMany(EspacoFisico, {
+      as: 'espacos',
+      foreignKey: { name: 'empresaId', field: 'empresa_id' },
+      onDelete: 'SET NULL'
+    });
+  }
 
-Empresa.hasMany(AuditoriaLog, {
-  as: 'auditorias',
-  foreignKey: { name: 'empresaId', field: 'empresa_id' },
-  onDelete: 'CASCADE'
+  if (ComunicacaoHistorico && !Empresa.associations.comunicacoes) {
+    Empresa.hasMany(ComunicacaoHistorico, {
+      as: 'comunicacoes',
+      foreignKey: { name: 'empresaId', field: 'empresa_id' },
+      onDelete: 'SET NULL'
+    });
+  }
+
+  if (AuditoriaLog && !Empresa.associations.auditorias) {
+    Empresa.hasMany(AuditoriaLog, {
+      as: 'auditorias',
+      foreignKey: { name: 'empresaId', field: 'empresa_id' },
+      onDelete: 'CASCADE'
+    });
+  }
+};
+
+sequelize.addHook('afterDefine', () => {
+  defineEmpresaAssociations();
 });
+defineEmpresaAssociations();
 
 export default Empresa;

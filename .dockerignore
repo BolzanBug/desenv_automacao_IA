@@ -1,0 +1,15 @@
+node_modules
+npm-debug.log
+.env
+.git
+.gitignore
+.vscode
+.agents
+arquivos_orquestrador
+docs
+erros-logica
+tests
+pollen_database.sqlite
+uploads/*
+!uploads/.gitkeep
+

@@ -111,6 +111,13 @@ const persist = async (req, res) => {
       });
     }
 
+    if (tipo === 'INTERNACIONAL' && !identificadorInternacional) {
+      return res.status(400).send({
+        message: 'Identificador internacional é obrigatório para empresas internacionais.',
+        data: null
+      });
+    }
+
     if (cnpj) {
       const existeCnpj = await Empresa.findOne({ where: { cnpj } });
       if (existeCnpj) {

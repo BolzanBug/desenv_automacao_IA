@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import documentoController from '../controllers/documentoController.js';
 
-const uploadDir = './uploads';
+const uploadDir = process.env.UPLOAD_DIR || './uploads';
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }

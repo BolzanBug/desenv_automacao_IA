@@ -1,7 +1,6 @@
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../config/database.js';
 import Empresa from './EmpresaModel.js';
-import ContratoMinuta from './ContratoMinutaModel.js';
 
 const AssinaturaContrato = sequelize.define('assinaturas_contrato', {
   id: {
@@ -74,11 +73,6 @@ const AssinaturaContrato = sequelize.define('assinaturas_contrato', {
 AssinaturaContrato.belongsTo(Empresa, {
   as: 'empresa',
   foreignKey: { name: 'empresaId', field: 'empresa_id' }
-});
-
-AssinaturaContrato.belongsTo(ContratoMinuta, {
-  as: 'contrato',
-  foreignKey: { name: 'contratoId', field: 'contrato_id' }
 });
 
 export default AssinaturaContrato;

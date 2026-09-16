@@ -1,0 +1,22 @@
+{
+  "name": "pollen-parque-gestao-afiliados",
+  "version": "1.0.0",
+  "description": "Sistema Integrado de Gestão de Afiliados do Pollen Parque Científico e Tecnológico",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test backend/tests/*.test.js frontend/tests/*.test.js",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "dev:backend": "npm --prefix backend run dev",
+    "start:backend": "npm --prefix backend run start",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "start:frontend": "npm --prefix frontend run start"
+  },
+  "keywords": [
+    "pollen-parque",
+    "sdlc",
+    "gestao-afiliados"
+  ]
+}
+
