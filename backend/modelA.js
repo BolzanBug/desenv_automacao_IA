@@ -1,0 +1,1 @@
+import B from "./modelB.js"; const A = { name: "A" }; A.hasMany = B; export default A;

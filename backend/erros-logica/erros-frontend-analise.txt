@@ -1,0 +1,19 @@
+# Relatório de Análise de Integração Frontend -> Backend
+Autor: Desenvolvedor Frontend Sênior
+Data: 16/09/2026
+
+1. Análise de Contratos e Endpoints:
+   - A API backend foi inspecionada em /backend/src/routes e /backend/src/controllers.
+   - O padrão de retorno corporativo { message, data } foi validado e o cliente Axios do Frontend está configurado para consumir data.data.
+   - Paginação na rota GET /companies: o backend retorna { data: { items: [...], total, page, totalPages } }. O frontend consome corretamente data.items com fallback para array vazio.
+   - Rota de métricas do Dashboard: GET /dashboard/metrics retorna todos os indicadores esperados pelo painel executivo (total ativos, faturamento pendente, alertas de vigência, taxa de ocupação).
+   - O fluxo de 5 assinaturas foi devidamente mapeado via GET /companies/:id/signatures e PUT /companies/:id/signatures/:tipo.
+   - O gerador de minutas contratuais responde em POST /companies/:id/contract/generate.
+
+2. Ajustes e Compatibilidades Prevenidas:
+   - Foi garantido que o CORS no backend permite requisições da porta 3000 do Next.js com métodos GET, POST, PUT, DELETE, PATCH.
+   - O tratamento de upload multipart/form-data em /companies/:id/documents está preparado para receber arquivos de certidões e editais.
+   - O endpoint público /public/register não exige autenticação para permitir autoatendimento direto de candidatos.
+
+Status: Integração Frontend -> Backend 100% alinhada sem bloqueios.
+

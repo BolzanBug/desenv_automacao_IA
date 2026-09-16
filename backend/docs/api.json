@@ -1,0 +1,544 @@
+{
+  "system": {
+    "name": "Sistema Integrado de Gestão de Afiliados — Pollen Parque Científico e Tecnológico",
+    "version": "1.0.0",
+    "description": "Plataforma web centralizada para mapeamento, acompanhamento contratual, gestão contábil/financeira, espaços físicos e comunicação com empresas afiliadas do Pollen Parque, substituindo planilhas manuais e minutas em Word/PDF preenchidas com 'X'.",
+    "base_url": "/api/v1",
+    "environment": "Node.js / Express / Sequelize / PostgreSQL"
+  },
+  "actors": [
+    {
+      "id": "EQUIPE_PROGRAMA",
+      "name": "Equipe do Programa Pollen",
+      "description": "Responsável pela triagem de candidatos, validação de documentos, acompanhamento do fluxo da minuta e das 5 assinaturas, gestão de vigências e disparos de comunicação."
+    },
+    {
+      "id": "EMPRESA_AFILIADA",
+      "name": "Empresa Afiliada / Proponente",
+      "description": "Preenche o formulário de autoatendimento, anexa certidões e documentos exigidos pelo edital, acompanha o status de homologação e consulta débitos/faturas pendentes."
+    },
+    {
+      "id": "SETOR_CONTABIL_FINANCEIRO",
+      "name": "Contabilidade / Financeiro",
+      "description": "Responsável por emitir Nota Fiscal e Boletos, gerar chave PIX, registrar condições de parcelamento e conceder baixa manual/confirmação no sistema (substituindo a antiga aba laranja da planilha)."
+    },
+    {
+      "id": "PROCURADORIA_REITORIA",
+      "name": "Procuradoria Jurídica e Reitoria",
+      "description": "Assinantes institucionais da minuta: Representante Legal da Empresa + 3 Assinantes Institucionais + Reitor em exercício."
+    }
+  ],
+  "userStories": [
+    {
+      "id": "US01",
+      "title": "Inscrição e Autoatendimento via Link Público",
+      "actor": "Empresa Afiliada",
+      "description": "Como proponente a afiliado do Pollen Parque, desejo preencher um formulário online padronizado com os dados cadastrais da minha empresa (com suporte a empresa nacional, grande porte com alteração contratual e internacional), para que meu cadastro entre diretamente no sistema sem necessidade de rascunhos manuais em planilhas.",
+      "acceptanceCriteria": [
+        "O sistema deve aceitar CNPJ para empresas nacionais e Registration/Tax ID para empresas internacionais.",
+        "Deve permitir indicar se a empresa está em processo de alteração contratual.",
+        "Deve capturar dados do Representante Legal (nome, CPF/documento, e-mail, telefone).",
+        "Ao submeter, o status inicial da empresa deve ser 'EM_ANALISE' e gerar um ID único.",
+        "Deve retornar código HTTP 201 com dados confirmados."
+      ],
+      "businessRules": [
+        "CNPJ deve ser único para empresas nacionais.",
+        "Campos obrigatórios: razão social, nome fantasia, e-mail de contato, tipo de empresa e representante legal.",
+        "Contato WhatsApp recebido externamente deve ser inserido como telefone principal da empresa."
+      ]
+    },
+    {
+      "id": "US02",
+      "title": "Gestão Centralizada e Visão 360° das Afiliadas",
+      "actor": "Equipe do Programa",
+      "description": "Como membro da equipe do Pollen Parque, desejo visualizar uma tabela completa com todas as empresas cadastradas, com filtros por status, tipo e vigência, para acompanhar os mais de 50 afiliados projetados.",
+      "acceptanceCriteria": [
+        "Listagem paginada e ordenável por nome, data de entrada e vigência.",
+        "Filtros por status: EM_ANALISE, MINUTA_GERADA, EM_ASSINATURA, AGUARDANDO_PAGAMENTO, ATIVO, VENCIDO, SUSPENSO.",
+        "Filtro por tipo de empresa (STARTUP, PME, GRANDE_PORTE, INTERNACIONAL).",
+        "Possibilidade de atualizar os dados cadastrais e status operacional."
+      ],
+      "businessRules": [
+        "Apenas operadores autorizados podem alterar o status geral da empresa.",
+        "A exclusão lógica deve ser preferida para manter o histórico de auditoria."
+      ]
+    },
+    {
+      "id": "US03",
+      "title": "Geração Automática da Minuta do Termo de Adesão",
+      "actor": "Equipe do Programa",
+      "description": "Como operador do programa, desejo gerar automaticamente a minuta oficial do contrato com os dados reais da empresa preenchidos (eliminando o preenchimento manual de 'X' em arquivos Word/PDF do Drive), para abrir o processo na Procuradoria com agilidade.",
+      "acceptanceCriteria": [
+        "O sistema deve mesclar automaticamente os dados cadastrais (Razão Social, CNPJ, Endereço, Representante Legal, Objeto) no template oficial da minuta.",
+        "A minuta gerada deve ser salva no banco vinculada à empresa com data de geração.",
+        "O status da empresa deve progredir automaticamente para 'MINUTA_GERADA'."
+      ],
+      "businessRules": [
+        "A minuta não pode ser gerada se faltarem dados essenciais do representante legal ou identificador fiscal.",
+        "O template deve prever cláusulas específicas de edital e propriedade intelectual."
+      ]
+    },
+    {
+      "id": "US04",
+      "title": "Acompanhamento do Checklist de 5 Assinaturas",
+      "actor": "Equipe do Programa / Procuradoria",
+      "description": "Como gestor de contratos, desejo controlar o status individual dos 5 signatários oficiais do termo de adesão, para saber exatamente em qual etapa a assinatura está travada.",
+      "acceptanceCriteria": [
+        "O sistema deve exibir e permitir marcar a assinatura de: 1. Representante Legal da Empresa; 2. Assinante Institucional 1; 3. Assinante Institucional 2; 4. Assinante Institucional 3; 5. Reitor em exercício.",
+        "Cada signatário deve registrar data e hora da confirmação e observações opcionais.",
+        "Quando todos os 5 assinarem, o status do contrato deve mudar para 'ASSINADO_COMPLETO' e liberar a etapa financeira."
+      ],
+      "businessRules": [
+        "O faturamento só pode ser emitido após as assinaturas ou mediante liberação excepcional documentada."
+      ]
+    },
+    {
+      "id": "US05",
+      "title": "Módulo Financeiro, Lançamento de NF/Boleto/PIX e Baixa",
+      "actor": "Setor Contábil / Financeiro",
+      "description": "Como responsável do setor financeiro, desejo lançar números de Nota Fiscal, boletos, chaves PIX e parcelamento no sistema, bem como registrar a baixa manual dos pagamentos, integrando o processo sem necessidade da planilha de controle laranja.",
+      "acceptanceCriteria": [
+        "Permitir cadastrar faturas vinculadas à empresa com valor, data de emissão, data de vencimento, número da NF, linha digitável do boleto e código PIX Copia-e-Cola.",
+        "Permitir parcelamento da anuidade em até 12 parcelas vinculadas ao mesmo contrato.",
+        "Registrar a baixa (pagamento efetuado) com data, valor pago, comprovante e operador responsável.",
+        "Atualizar automaticamente o status da empresa para 'ATIVO' quando a primeira parcela/anuidade for liquidada."
+      ],
+      "businessRules": [
+        "Faturas vencidas e não pagas devem ser automaticamente sinalizadas como INADIMPLENTE.",
+        "O registro de baixa deve armazenar o ID do usuário que deu baixa para fins de auditoria."
+      ]
+    },
+    {
+      "id": "US06",
+      "title": "Monitoramento de Vigência e Alertas de Término de Anuidade",
+      "actor": "Equipe do Programa",
+      "description": "Como analista do programa, desejo visualizar alertas automáticos de empresas com anuidade a vencer em 60 e 30 dias, para providenciar a renovação tempestiva sem interrupção do convênio.",
+      "acceptanceCriteria": [
+        "Painel com badges visuais indicando: 'Vigência Normal (> 60 dias)', 'Atenção (30 a 60 dias)', 'Urgente (< 30 dias)' e 'Vencido'.",
+        "Endpoint específico para consulta de empresas com vigência próxima ao fim.",
+        "Disparo de lembrete de renovação com um clique."
+      ],
+      "businessRules": [
+        "A vigência padrão da anuidade é de 12 meses a contar da data de homologação das assinaturas."
+      ]
+    },
+    {
+      "id": "US07",
+      "title": "Upload e Guarda Centralizada de Documentos do Edital",
+      "actor": "Empresa Afiliada / Equipe do Programa",
+      "description": "Como analista ou empresa, desejo fazer upload de arquivos digitais (certidões negativas, comprovante de CNPJ, contrato social, procurações) diretamente na ficha da empresa, substituindo o envio fragmentado por e-mail (caixa NITO1) e WhatsApp.",
+      "acceptanceCriteria": [
+        "Upload de arquivos nos formatos PDF, PNG, JPEG de até 15MB.",
+        "Classificação por tipo de documento: CONTRATO_SOCIAL, CERTIDAO_FEDERAL, CERTIDAO_ESTADUAL, CERTIDAO_TRABALHISTA, COMPROVANTE_CNPJ, MINUTA_ASSINADA, OUTROS.",
+        "Visualização e download de arquivos com registro de data/hora de upload."
+      ],
+      "businessRules": [
+        "Documentos obrigatórios do edital devem ter status de conferência (PENDENTE, APROVADO, REJEITADO com justificativa)."
+      ]
+    },
+    {
+      "id": "US08",
+      "title": "Central de Comunicação e Disparo de E-mails com Histórico",
+      "actor": "Equipe do Programa",
+      "description": "Como membro da equipe Pollen, desejo enviar comunicados individuais ou em lote para as empresas (notificações de edital, avisos de pendência financeira, lembretes de renovação) mantendo todo o histórico registrado na plataforma.",
+      "acceptanceCriteria": [
+        "Envio de e-mail individual a partir da tela da empresa.",
+        "Envio em lote filtrando por status (ex: todas as empresas 'AGUARDANDO_PAGAMENTO' ou 'VENCENDO').",
+        "Histórico completo com assunto, corpo da mensagem, destinatário, data/hora e status de entrega."
+      ],
+      "businessRules": [
+        "Preservar rastreabilidade de todas as comunicações para suporte a eventuais chamados da Procuradoria."
+      ]
+    },
+    {
+      "id": "US09",
+      "title": "Gestão de Espaços Físicos e Ocupação",
+      "actor": "Equipe do Programa",
+      "description": "Como gestor de infraestrutura do Pollen, desejo registrar e controlar os espaços físicos alocados para as empresas (Salas Privativas, Estações de Coworking, Laboratórios), substituindo a antiga terceira planilha de controle de espaços.",
+      "acceptanceCriteria": [
+        "Cadastro de espaços com identificação, tipo (SALA_PRIVATIVA, COWORKING, LABORATORIO), capacidade e status (DISPONIVEL, OCUPADO, MANUTENCAO).",
+        "Vinculação de uma empresa a um ou mais espaços físicos.",
+        "Métricas de taxa de ocupação no dashboard."
+      ],
+      "businessRules": [
+        "Uma sala privativa não pode ser vinculada a mais de uma empresa sem autorização expressa de compartilhamento."
+      ]
+    },
+    {
+      "id": "US10",
+      "title": "Dashboard Executivo e KPIs Estratégicos",
+      "actor": "Equipe do Programa / Diretoria",
+      "description": "Como gestor executivo, desejo visualizar os indicadores-chave de desempenho (total de afiliados, faturamento do mês, anuidades a vencer, pendências de assinaturas) para gerenciar o crescimento do parque rumo à meta de 60 empresas.",
+      "acceptanceCriteria": [
+        "KPI: Total de Empresas Afiliadas Ativas.",
+        "KPI: Empresas em Processo de Entrada (Triagem / Minuta / Assinatura).",
+        "KPI: Faturamento Pendente e Inadimplência.",
+        "KPI: Taxa de Ocupação de Espaços Físicos.",
+        "Tabela de alertas rápidos para ação imediata."
+      ],
+      "businessRules": [
+        "Os dados do dashboard devem refletir os registros em tempo real."
+      ]
+    }
+  ],
+  "apiContracts": [
+    {
+      "endpoint": "/api/v1/companies",
+      "method": "GET",
+      "summary": "Listar todas as empresas com filtros e paginação",
+      "queryParams": [
+        { "name": "status", "type": "string", "required": false, "description": "Filtro por status (ex: ATIVO, EM_ANALISE)" },
+        { "name": "tipo", "type": "string", "required": false, "description": "Filtro por tipo (STARTUP, PME, GRANDE_PORTE, INTERNACIONAL)" },
+        { "name": "search", "type": "string", "required": false, "description": "Busca textual por razão social, nome fantasia ou CNPJ" },
+        { "name": "page", "type": "integer", "required": false, "default": 1 },
+        { "name": "limit", "type": "integer", "required": false, "default": 20 }
+      ],
+      "responses": {
+        "200": {
+          "description": "Lista de empresas retornada com sucesso",
+          "example": {
+            "message": "Empresas listadas com sucesso",
+            "data": {
+              "total": 22,
+              "page": 1,
+              "totalPages": 2,
+              "items": [
+                {
+                  "id": "8f3b20c1-5c3a-4e2b-bdf0-4b2a6f87d101",
+                  "razao_social": "Tech Inovação S/A",
+                  "nome_fantasia": "TechInova",
+                  "cnpj": "12.345.678/0001-90",
+                  "tipo": "STARTUP",
+                  "status": "ATIVO",
+                  "email_contato": "contato@techinova.com.br",
+                  "telefone": "(49) 99999-0000",
+                  "data_vigencia_fim": "2027-08-30T00:00:00.000Z",
+                  "created_at": "2026-08-30T10:00:00.000Z"
+                }
+              ]
+            }
+          }
+        },
+        "500": { "description": "Erro interno de processamento" }
+      }
+    },
+    {
+      "endpoint": "/api/v1/companies",
+      "method": "POST",
+      "summary": "Cadastrar nova empresa afiliada",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "razao_social": "string (obrigatório)",
+              "nome_fantasia": "string",
+              "cnpj": "string (obrigatório se nacional)",
+              "identificador_internacional": "string (obrigatório se internacional)",
+              "tipo": "string (STARTUP | PME | GRANDE_PORTE | INTERNACIONAL)",
+              "status_alteracao_contratual": "boolean",
+              "email_contato": "string (email válido)",
+              "telefone": "string",
+              "endereco_completo": "string",
+              "cidade": "string",
+              "estado": "string",
+              "cep": "string",
+              "pais": "string",
+              "representante_nome": "string (obrigatório)",
+              "representante_cpf": "string",
+              "representante_email": "string",
+              "representante_telefone": "string",
+              "observacoes": "string"
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Empresa cadastrada com sucesso",
+          "example": {
+            "message": "Empresa cadastrada com sucesso",
+            "data": { "id": "8f3b20c1-5c3a-4e2b-bdf0-4b2a6f87d101", "status": "EM_ANALISE" }
+          }
+        },
+        "400": { "description": "Dados inválidos ou CNPJ já cadastrado" }
+      }
+    },
+    {
+      "endpoint": "/api/v1/companies/:id",
+      "method": "GET",
+      "summary": "Obter visão 360° da empresa (dados, assinaturas, faturas, documentos, espaços)",
+      "parameters": [
+        { "name": "id", "type": "UUID", "required": true }
+      ],
+      "responses": {
+        "200": {
+          "description": "Detalhes completos da empresa",
+          "example": {
+            "message": "Empresa localizada",
+            "data": {
+              "id": "8f3b20c1-5c3a-4e2b-bdf0-4b2a6f87d101",
+              "razao_social": "Tech Inovação S/A",
+              "cnpj": "12.345.678/0001-90",
+              "status": "ATIVO",
+              "signatures": [],
+              "documents": [],
+              "invoices": [],
+              "spaces": []
+            }
+          }
+        },
+        "404": { "description": "Empresa não encontrada" }
+      }
+    },
+    {
+      "endpoint": "/api/v1/companies/:id",
+      "method": "PUT",
+      "summary": "Atualizar cadastro da empresa",
+      "requestBody": { "required": true, "content": { "application/json": {} } },
+      "responses": {
+        "200": { "description": "Empresa atualizada com sucesso" },
+        "404": { "description": "Empresa não encontrada" }
+      }
+    },
+    {
+      "endpoint": "/api/v1/companies/:id/status",
+      "method": "PATCH",
+      "summary": "Alterar status operacional da empresa",
+      "requestBody": {
+        "schema": { "status": "string (EM_ANALISE | MINUTA_GERADA | EM_ASSINATURA | AGUARDANDO_PAGAMENTO | ATIVO | INADIMPLENTE | VENCIDO | SUSPENSO | DESLIGADO)", "justificativa": "string" }
+      },
+      "responses": {
+        "200": { "description": "Status alterado com sucesso" }
+      }
+    },
+    {
+      "endpoint": "/api/v1/companies/:id/contract/generate",
+      "method": "POST",
+      "summary": "Gerar automaticamente a minuta oficial preenchida do contrato",
+      "parameters": [{ "name": "id", "type": "UUID", "required": true }],
+      "requestBody": {
+        "schema": {
+          "valor_anuidade": "number (opcional, padrão do edital)",
+          "clausulas_adicionais": "string (opcional)"
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Minuta contratual gerada com sucesso",
+          "example": {
+            "message": "Minuta gerada com sucesso",
+            "data": {
+              "empresa_id": "8f3b20c1-5c3a-4e2b-bdf0-4b2a6f87d101",
+              "titulo": "TERMO DE ADESÃO AO PROGRAMA DE AFILIADOS POLLEN PARQUE Nº 042/2026",
+              "conteudo_gerado": "Pelo presente instrumento...",
+              "status": "GERADO",
+              "gerado_em": "2026-09-16T14:45:00.000Z"
+            }
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/api/v1/companies/:id/signatures",
+      "method": "GET",
+      "summary": "Consultar checklist dos 5 assinantes",
+      "responses": {
+        "200": {
+          "description": "Checklist dos assinantes",
+          "example": {
+            "message": "Assinaturas consultadas",
+            "data": [
+              { "signatario_tipo": "REPRESENTANTE_LEGAL", "nome": "Carlos Silva", "assinado": true, "data_assinatura": "2026-09-12T10:00:00Z" },
+              { "signatario_tipo": "INSTITUCIONAL_1", "nome": "Diretoria Pollen", "assinado": true, "data_assinatura": "2026-09-13T11:00:00Z" },
+              { "signatario_tipo": "INSTITUCIONAL_2", "nome": "Coordenação de Inovação", "assinado": true, "data_assinatura": "2026-09-13T15:00:00Z" },
+              { "signatario_tipo": "INSTITUCIONAL_3", "nome": "Procuradoria Jurídica", "assinado": true, "data_assinatura": "2026-09-14T09:30:00Z" },
+              { "signatario_tipo": "REITOR", "nome": "Reitor em Exercício", "assinado": false, "data_assinatura": null }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/api/v1/companies/:id/signatures/:tipo",
+      "method": "PUT",
+      "summary": "Atualizar status de assinatura de um signatário específico",
+      "requestBody": {
+        "schema": { "assinado": "boolean", "nome": "string", "observacoes": "string" }
+      },
+      "responses": {
+        "200": { "description": "Status de assinatura atualizado" }
+      }
+    },
+    {
+      "endpoint": "/api/v1/companies/:id/documents",
+      "method": "GET",
+      "summary": "Listar documentos anexados da empresa",
+      "responses": {
+        "200": { "description": "Lista de documentos cadastrados" }
+      }
+    },
+    {
+      "endpoint": "/api/v1/companies/:id/documents",
+      "method": "POST",
+      "summary": "Fazer upload de documento exigido pelo edital",
+      "requestBody": {
+        "schema": {
+          "tipo": "string (CONTRATO_SOCIAL | CERTIDAO_FEDERAL | CERTIDAO_ESTADUAL | CERTIDAO_TRABALHISTA | COMPROVANTE_CNPJ | MINUTA_ASSINADA | OUTROS)",
+          "descricao": "string",
+          "file": "binary (multipart/form-data)"
+        }
+      },
+      "responses": {
+        "201": { "description": "Documento salvo com sucesso" }
+      }
+    },
+    {
+      "endpoint": "/api/v1/financial/invoices",
+      "method": "GET",
+      "summary": "Listar faturas e controle contábil (substitui aba laranja)",
+      "queryParams": [
+        { "name": "empresa_id", "type": "UUID" },
+        { "name": "status", "type": "string (PENDENTE | PAGO | ATRASADO | CANCELADO)" }
+      ],
+      "responses": {
+        "200": { "description": "Lista de faturas" }
+      }
+    },
+    {
+      "endpoint": "/api/v1/financial/invoices",
+      "method": "POST",
+      "summary": "Emitir/Cadastrar nova fatura contábil com suporte a boleto e PIX",
+      "requestBody": {
+        "schema": {
+          "empresa_id": "UUID (obrigatório)",
+          "numero_nf": "string",
+          "numero_boleto": "string",
+          "chave_pix": "string",
+          "pix_copia_cola": "string",
+          "valor": "number (obrigatório)",
+          "numero_parcela": "integer (default 1)",
+          "total_parcelas": "integer (default 1)",
+          "data_vencimento": "date (obrigatório)",
+          "observacoes": "string"
+        }
+      },
+      "responses": {
+        "201": { "description": "Fatura cadastrada com sucesso" }
+      }
+    },
+    {
+      "endpoint": "/api/v1/financial/invoices/:id/payment",
+      "method": "PATCH",
+      "summary": "Dar baixa contábil manual e confirmar pagamento",
+      "requestBody": {
+        "schema": {
+          "valor_pago": "number",
+          "data_pagamento": "date",
+          "forma_pagamento": "string (BOLETO | PIX | TRANSFERENCIA)",
+          "comprovante_url": "string",
+          "operador": "string"
+        }
+      },
+      "responses": {
+        "200": { "description": "Baixa contábil confirmada e status da empresa atualizado" }
+      }
+    },
+    {
+      "endpoint": "/api/v1/communications/emails",
+      "method": "GET",
+      "summary": "Consultar histórico de mensagens enviadas",
+      "responses": {
+        "200": { "description": "Histórico retornado com sucesso" }
+      }
+    },
+    {
+      "endpoint": "/api/v1/communications/emails",
+      "method": "POST",
+      "summary": "Disparar e-mail individual ou em lote para afiliadas",
+      "requestBody": {
+        "schema": {
+          "empresa_ids": "array de UUIDs (ou vazio para envio baseado em filtro_status)",
+          "filtro_status": "string (opcional para envio em lote)",
+          "assunto": "string (obrigatório)",
+          "mensagem": "string (obrigatório)",
+          "template_tipo": "string (AVISO_EDITAL | COBRANCA_PENDENTE | LEMBRETE_VIGENCIA | GERAL)"
+        }
+      },
+      "responses": {
+        "200": { "description": "Disparo executado e registrado no histórico" }
+      }
+    },
+    {
+      "endpoint": "/api/v1/spaces",
+      "method": "GET",
+      "summary": "Listar espaços físicos e ocupações",
+      "responses": {
+        "200": { "description": "Lista de salas e postos de coworking com status" }
+      }
+    },
+    {
+      "endpoint": "/api/v1/spaces",
+      "method": "POST",
+      "summary": "Cadastrar ou alocar espaço físico para empresa",
+      "requestBody": {
+        "schema": {
+          "nome": "string",
+          "tipo": "string (SALA_PRIVATIVA | COWORKING | LABORATORIO)",
+          "bloco": "string",
+          "capacidade": "integer",
+          "empresa_id": "UUID (opcional)",
+          "status": "string (DISPONIVEL | OCUPADO | MANUTENCAO)"
+        }
+      },
+      "responses": {
+        "201": { "description": "Espaço cadastrado/alocado com sucesso" }
+      }
+    },
+    {
+      "endpoint": "/api/v1/dashboard/metrics",
+      "method": "GET",
+      "summary": "Retornar métricas executivas consolidadas",
+      "responses": {
+        "200": {
+          "description": "Métricas consolidadas",
+          "example": {
+            "total_afiliados_ativos": 22,
+            "total_em_processo": 26,
+            "faturamento_pendente_total": 45000.00,
+            "faturas_vencidas_inadimplentes": 3,
+            "vigencias_vencendo_60_dias": 5,
+            "ocupacao_espacos_percentual": 78.5,
+            "projecao_meta_anual": 50
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/api/v1/public/register",
+      "method": "POST",
+      "summary": "Portal público de autoatendimento para submissão cadastral direta pela empresa",
+      "requestBody": {
+        "schema": {
+          "razao_social": "string (obrigatório)",
+          "nome_fantasia": "string",
+          "cnpj": "string",
+          "identificador_internacional": "string",
+          "tipo": "string",
+          "status_alteracao_contratual": "boolean",
+          "email_contato": "string",
+          "telefone": "string",
+          "endereco_completo": "string",
+          "representante_nome": "string",
+          "representante_cpf": "string",
+          "representante_email": "string",
+          "representante_telefone": "string"
+        }
+      },
+      "responses": {
+        "201": { "description": "Cadastro recebido com sucesso via autoatendimento" }
+      }
+    }
+  ]
+}
+

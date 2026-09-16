@@ -1,0 +1,1 @@
+import A from "./modelA.js"; const B = { name: "B" }; B.belongsTo = A; export default B;

@@ -119,35 +119,16 @@ async def orquestrar_antigravity(ideia_ou_contexto: str):
         modelo_llm="pro"
     )
 
-    # 4. DESENVOLVEDOR FRONTEND
-    t_front = await processar_com_agente(
-        nome="Desenvolvedor Frontend Sênior",
-        system_prompt=ler_prompt_agente("dev_frontend.txt"),
-        task_description=f"Crie o código fonte real das telas (Next.js/React).{regras_arquitetura}",
-        dependencias=f"Código Backend gerado: {t_back.model_dump_json() if t_back else 'N/A'}\nAPI: {t_req.model_dump_json() if t_req else 'N/A'}",
-        modelo_pydantic=FrontendOutput,
-        modelo_llm="pro"
-    )
-
-    # 5. ENGENHEIRO QA
-    t_qa = await processar_com_agente(
-        nome="Engenheiro de Testes e QA Sênior",
-        system_prompt=ler_prompt_agente("qa.txt"),
-        task_description=f"Crie arquivos de teste automatizado para o código gerado.{regras_arquitetura}",
-        dependencias=f"Código Backend: {t_back.model_dump_json() if t_back else 'N/A'}\nCódigo Frontend: {t_front.model_dump_json() if t_front else 'N/A'}",
-        modelo_pydantic=QAOutput
-    )
-
-    # 6. DOCUMENTADOR
+    # 4. DOCUMENTADOR
     t_doc = await processar_com_agente(
         nome="Tech Lead e Documentador",
         system_prompt=ler_prompt_agente("documentador.txt"),
         task_description=f"Crie o relatório consolidado de changelog e lições aprendidas.",
-        dependencias=f"Requisitos: {t_req}\nArquiteto: {t_arq}\nBackend: {t_back}\nFrontend: {t_front}\nQA: {t_qa}",
+        dependencias=f"Requisitos: {t_req}\nArquiteto: {t_arq}\nBackend: {t_back}",
         modelo_pydantic=DocumentacaoOutput
     )
 
-    return t_req, t_arq, t_back, t_front, t_qa, t_doc
+    return t_req, t_arq, t_back, t_doc
 
 
 async def main():
@@ -196,7 +177,7 @@ async def main():
         print("❌ Escolha inválida.")
         return
 
-    t_req, t_arq, t_back, t_front, t_qa, t_doc = await orquestrar_antigravity(ideia)
+    t_req, t_arq, t_back, t_doc = await orquestrar_antigravity(ideia)
     
     if not t_doc:
         print("❌ O processo foi interrompido por um erro.")
@@ -226,14 +207,9 @@ async def main():
         print("\n📦 Gerando Scaffold Backend:")
         salvar_arquivos_codigo(t_back.backend_files)
         
-    if t_front:
-        print("\n📦 Gerando Scaffold Frontend:")
-        salvar_arquivos_codigo(t_front.frontend_files)
+    
 
-    if t_qa:
-        print("\n🧪 Gerando Testes:")
-        salvar_arquivos_codigo(t_qa.backend_tests)
-        salvar_arquivos_codigo(t_qa.frontend_tests)
+    
 
     if t_doc:
         with open("artefatos/historico_versoes.md", "a", encoding="utf-8") as f:
