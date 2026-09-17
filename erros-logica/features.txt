@@ -1,0 +1,3 @@
+analize o arquivo erros-logica/dasd.pdf, onde tem um formulario onde as empresasque não residem no Pollen Parque precisam responder para assim entrar no Pollen
+
+analize o arquivo erros-logica/Modelo minuta Programa de Afiliados (1).docx, onde tem um modelo de contrato para a empresa que não faz parte do pollen poder assinar para residir/usar os recursos do pollen.é para usar a biblioteca libreoffice converter para converter arquivos .docx

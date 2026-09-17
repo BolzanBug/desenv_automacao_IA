@@ -1,0 +1,3 @@
+Erro: O backend falhou ao iniciar na porta 3001 porque o endereço já estava em uso (EADDRINUSE: address already in use :::3001).
+Como resolver: Altere a porta do backend no arquivo .env (ex: PORT=3002) ou nas variáveis de ambiente na inicialização. O frontend foi atualizado com a nova URL no .env.local (NEXT_PUBLIC_API_URL=http://localhost:3002/api).
+

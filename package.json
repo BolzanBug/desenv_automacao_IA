@@ -19,14 +19,18 @@
   "author": "Equipe de Engenharia Pollen",
   "license": "ISC",
   "dependencies": {
+    "archiver": "^8.0.0",
     "cors": "^2.8.5",
+    "docxtemplater": "^3.70.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
+    "libreoffice-convert": "^1.8.2",
     "multer": "^1.4.5-lts.1",
     "pg": "^8.13.1",
     "pg-hstore": "^2.3.4",
+    "pizzip": "^3.2.0",
     "sequelize": "^6.37.5",
+    "unzipper": "^0.12.5",
     "uuid": "^10.0.0"
   }
 }
-

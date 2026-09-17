@@ -12,6 +12,7 @@ export default (app) => {
   // Aliases compatíveis com rotas em português
   app.get('/empresas', empresaController.get);
   app.post('/empresas', empresaController.persist);
+  app.post('/empresas/nao-residente', empresaController.registerNonResident);
   app.get('/empresas/:id', empresaController.getById);
   app.put('/empresas/:id', empresaController.update);
   app.delete('/empresas/:id', empresaController.remove);

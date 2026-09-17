@@ -91,6 +91,41 @@ const Empresa = sequelize.define('empresas', {
     type: DataTypes.STRING(100),
     defaultValue: 'Brasil'
   },
+  residente: {
+    field: 'residente',
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
+  },
+  anoFundacao: {
+    field: 'ano_fundacao',
+    type: DataTypes.INTEGER,
+    allowNull: true
+  },
+  areaAtuacao: {
+    field: 'area_atuacao',
+    type: DataTypes.STRING(150),
+    allowNull: true
+  },
+  emailCobranca: {
+    field: 'email_cobranca',
+    type: DataTypes.STRING(255),
+    allowNull: true
+  },
+  site: {
+    field: 'site',
+    type: DataTypes.STRING(255),
+    allowNull: true
+  },
+  representanteEndereco: {
+    field: 'representante_endereco',
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  representanteCargo: {
+    field: 'representante_cargo',
+    type: DataTypes.STRING(150),
+    allowNull: true
+  },
   representanteNome: {
     field: 'representante_nome',
     type: DataTypes.STRING(255),

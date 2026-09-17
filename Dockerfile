@@ -8,8 +8,8 @@ FROM node:22-alpine
 # Diretório de trabalho
 WORKDIR /app
 
-# Instalação de dependências de compilação para pacotes nativos
-RUN apk add --no-cache python3 make g++
+# Instalação de dependências de compilação para pacotes nativos e LibreOffice para PDF
+RUN apk add --no-cache python3 make g++ libreoffice
 
 # Copiar descritores de dependências
 COPY package*.json ./
