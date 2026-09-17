@@ -46,9 +46,11 @@ const AuditoriaLog = sequelize.define('auditoria_logs', {
 });
 
 // Relacionamentos declarados no próprio Model
+setTimeout(() => {
 AuditoriaLog.belongsTo(Empresa, {
   as: 'empresa',
   foreignKey: { name: 'empresaId', field: 'empresa_id' }
 });
+}, 0);
 
 export default AuditoriaLog;

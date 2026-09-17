@@ -4,6 +4,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { connectDatabase, syncDatabase } from './config/database.js';
+import './models/EmpresaModel.js';
 import Routes from './routes/index.js';
 
 dotenv.config();

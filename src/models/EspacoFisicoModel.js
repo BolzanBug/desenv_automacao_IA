@@ -66,9 +66,11 @@ const EspacoFisico = sequelize.define('espacos_fisicos', {
 });
 
 // Relacionamentos declarados no próprio Model
+setTimeout(() => {
 EspacoFisico.belongsTo(Empresa, {
   as: 'empresa',
   foreignKey: { name: 'empresaId', field: 'empresa_id' }
 });
+}, 0);
 
 export default EspacoFisico;

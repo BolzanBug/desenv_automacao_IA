@@ -1,43 +1,72 @@
 # Sistema Integrado de Gestão de Afiliados — Pollen Parque Científico e Tecnológico
 
-> **API RESTful Corporativa** para mapeamento, triagem, geração automatizada de minutas contratuais, acompanhamento nominal dos 5 signatários oficiais, gestão contábil/financeira (boletos, PIX e baixas), controle de espaços físicos e métricas executivas do ecossistema do **Pollen Parque**.
+> **API RESTful Corporativa** construída em Node.js (ES Modules puro) e PostgreSQL 16 para triagem, geração automatizada de minutas contratuais, acompanhamento dos 5 signatários oficiais, conciliação financeira (boletos, PIX e baixas contábeis), controle de espaços físicos e métricas executivas do ecossistema de inovação do **Pollen Parque**.
 
 ---
 
-## 🏗️ 1. Arquitetura Tecnológica e Versões
+## 🏗️ 1. Arquitetura Tecnológica e Padrões da Skill
 
-A stack do backend foi auditada, corrigida e padronizada em JavaScript moderno (ES Modules puro), eliminando dependências legadas e gargalos de concorrência:
+A arquitetura do backend segue rigorosamente o padrão arquitetural corporativo da skill **`desenvolvedor-backend`** (estilo `cac-api`), priorizando desacoplamento, estabilidade e conformidade com os contratos OpenAPI:
 
-| Componente | Tecnologia | Versão Homologada | Função na Arquitetura |
+| Componente | Tecnologia / Padrão | Versão Homologada | Função na Arquitetura |
 | :--- | :--- | :--- | :--- |
-| **Runtime** | Node.js | `>= 20.x` (Homologado em **v22.22.x**) | Execução assíncrona orientada a eventos |
-| **Framework HTTP** | Express.js | `^4.21.2` | Roteamento RESTful, middlewares e uploads |
-| **ORM** | Sequelize | `^6.37.5` | Mapeamento Objeto-Relacional com chaves UUID |
+| **Runtime** | Node.js | `>= 20.x` (Homologado em **v22.x**) | Execução assíncrona orientada a eventos em ES Modules |
+| **Framework HTTP** | Express.js | `^4.21.2` | Roteamento RESTful, middlewares e uploads multipart |
+| **ORM** | Sequelize | `^6.37.5` | Mapeamento objeto-relacional com chaves UUIDv4 |
 | **Banco de Dados** | PostgreSQL | **16-alpine** | Persistência relacional em 3ª Forma Normal (3FN) |
-| **Engine UUID** | `uuid-ossp` | Nativo do PostgreSQL | Geração segura de identificadores UUIDv4 |
-| **Containers** | Docker & Compose | Compose spec `3.8` | Orquestração de containers para dev e prod |
-| **Suíte de Testes** | Node Test Runner | Nativo (`node:test`, `node:assert`) | Bateria de testes unitários e de integração |
+| **Engine UUID** | `uuid-ossp` | Nativo do PostgreSQL | Geração criptográfica segura de UUIDs |
+| **Containers** | Docker & Compose | Compose spec | Orquestração de containers para desenvolvimento e produção |
+| **Suíte de Testes** | Node Test Runner | Nativo (`node:test`, `node:assert`) | Bateria de 28 testes automatizados (QA) |
+| **Tipagem** | JavaScript Puro | ESM Nativo | **Zero TypeScript** — código 100% puro e sem compilação prévia |
 
 ---
 
-## 📂 2. Estrutura de Arquivos na Raiz (`/back`)
+## 📐 2. Padrões de Projeto Estritos (`cac-api`)
 
-Todos os arquivos de infraestrutura, configuração, dependências e código fonte estão centralizados estritamente dentro da raiz da pasta `back`:
+1. **Models (`./src/models/`):**
+   - **Nomenclatura:** Todos os arquivos seguem PascalCase com sufixo `Model.js` (ex: `EmpresaModel.js`).
+   - **Mapeamento:** Propriedades em `camelCase` mapeadas para o banco via `field: 'snake_case'`.
+   - **Opções:** Todos os modelos contêm `{ freezeTableName: true, timestamps: false }`.
+   - **Relações Descentralizadas:** Todas as relações (`hasMany`, `belongsTo`) são declaradas no próprio arquivo do Model.
+   - **Proibição de Centralizador:** É estritamente **proibida** a existência de `models/index.js`.
+   - **Ciclo ESM Eliminado:** Sem dependências circulares estáticas ou *Temporal Dead Zone* (TDZ), utilizando vinculação via hook nativo `afterDefine` do Sequelize. Proibido o uso de `queueMicrotask`, `setImmediate` ou exportações artificiais `init*`.
+
+2. **Controllers (`./src/controllers/`):**
+   - **Funções:** Arrow functions assíncronas padrão: `const acao = async (req, res) => { ... }`.
+   - **Respostas:** Padronizadas estritamente como `return res.status(CODIGO).send({ message, data })`.
+   - **Exportação:** Exportação consolidada única no final do arquivo: `export default { metodo1, metodo2, ... }`.
+
+3. **Rotas (`./src/routes/`):**
+   - **Assinatura Individual:** Cada arquivo exporta exclusivamente `export default (app) => { app.get(...) }`.
+   - **Injeção Centralizada:** O arquivo `src/routes/index.js` apenas importa as rotas individuais e as injeta no roteador via `Routes(app)`.
+   - **Prefixos Ativos:** As rotas são montadas e acessíveis em `/api/v1`, `/api` e na raiz `/`.
+   - **Aliases:** `empresaRoute.js` suporta tanto `/companies` quanto `/empresas`.
+
+---
+
+## 📂 3. Estrutura do Repositório na Raiz (`/back`)
+
+Todos os arquivos de infraestrutura, configuração, dependências e código-fonte estão centralizados diretamente na raiz da pasta `back`:
 
 ```
 back/
-├── Dockerfile                   # Build conteinerizado otimizado da API Express
+├── Dockerfile                   # Build conteinerizado Node 22 Alpine otimizado da API
 ├── docker-compose.yml           # Orquestração do PostgreSQL 16 e da API Express
-├── .dockerignore                # Regras de exclusão do build Docker
+├── .dockerignore                # Regras de exclusão de build Docker (node_modules, uploads, docs)
 ├── .env.example                 # Modelo canônico documentado das variáveis de ambiente
 ├── .env                         # Variáveis de ambiente ativas
-├── package.json                 # Manifesto de dependências e scripts NPM
+├── package.json                 # Manifesto de dependências (PostgreSQL puro, sem SQLite)
 ├── README.md                    # Documentação técnica integral da aplicação
 ├── schema.sql                   # Definição DDL relacional em 3FN e sementes iniciais
+├── docs/                        # Documentações de arquitetura, contratos e auditoria
+│   ├── ADR-001-arquitetura.md
+│   ├── api.json
+│   ├── relatorio_auditoria.md   # Relatório oficial da auditoria de estabilidade
+│   └── rotas_api.md
 ├── src/
 │   ├── config/
 │   │   └── database.js          # Conexão Sequelize exclusiva com PostgreSQL 16
-│   ├── controllers/             # Controladores com padrão empresarial { message, data }
+│   ├── controllers/             # Controladores com padrão { message, data }
 │   │   ├── empresaController.js
 │   │   ├── assinaturaController.js
 │   │   ├── financeiroController.js
@@ -66,26 +95,26 @@ back/
 │   │   ├── dashboardRoute.js
 │   │   └── publicRoute.js
 │   ├── utils/
-│   │   └── contractGenerator.js # Gerador oficial de termos sem preenchimento manual "X"
+│   │   └── contractGenerator.js # Gerador oficial de termos sem preenchimento manual
 │   └── server.js                # Bootstrap Express, healthcheck e escuta HTTP
-├── tests/                       # Bateria de testes automatizados QA
+├── tests/                       # Bateria de testes automatizados QA (28 testes)
 │   ├── apiContracts.test.js
 │   ├── businessRules.test.js
 │   ├── contractGenerator.test.js
 │   ├── modelsValidation.test.js
 │   ├── schemaValidation.test.js
 │   └── serverHealth.test.js
-└── uploads/                     # Armazenamento de arquivos e certidões
+└── uploads/                     # Diretório de armazenamento de arquivos e certidões
 ```
 
 ---
 
-## 🐳 3. Passo a Passo EXATO: Como Rodar com Docker
+## 🐳 4. Passo a Passo EXATO: Como Rodar com Docker
 
 O ecossistema Docker está 100% configurado na raiz do diretório `back`.
 
 ### Opção A: Subir Tudo via Docker (PostgreSQL 16 + API Express)
-Ideal para homologação e execução completa conteinerizada sem depender de runtime local:
+Ideal para homologação e execução completa conteinerizada:
 
 1. **Abra o terminal na pasta `back`**:
    ```bash
@@ -97,7 +126,7 @@ Ideal para homologação e execução completa conteinerizada sem depender de ru
    cp -n .env.example .env
    ```
 
-3. **Construa e inicie os containers em segundo plano**:
+3. **Construa a imagem e inicie os containers em segundo plano**:
    ```bash
    docker compose up --build -d
    ```
@@ -106,42 +135,44 @@ Ideal para homologação e execução completa conteinerizada sem depender de ru
    ```bash
    docker compose ps
    ```
-   *Ambos os containers (`pollen_postgres` com status `healthy` e `pollen_api` rodando) estarão operacionais.*
+   *Ambos os containers estarão ativos:*
+   - `pollen_postgres`: rodando na porta `${POSTGRES_PORT:-5432}` com status `(healthy)`.
+   - `pollen_api`: rodando na porta `3001` com status `Up`.
 
 5. **Testar o Health Check da API**:
    ```bash
    curl http://localhost:3001/health
    ```
-   *Resposta esperada:*
+   *Resposta esperada (HTTP 200):*
    ```json
    {
      "status": "ONLINE",
      "system": "Sistema Integrado de Gestão de Afiliados — Pollen Parque",
-     "timestamp": "..."
+     "timestamp": "2026-09-17T..."
    }
    ```
 
-6. **Para acompanhar os logs em tempo real**:
+6. **Acompanhar os logs em tempo real**:
    ```bash
-   docker compose logs -f
+   docker compose logs -f api
    ```
 
 7. **Para pausar ou derrubar os containers**:
    ```bash
    docker compose down
    ```
-   *(Caso deseje apagar os volumes de dados persistentes do banco: `docker compose down -v`)*
+   *(Caso queira apagar também o volume persistente do banco: `docker compose down -v`)*
 
 ---
 
 ### Opção B: Subir Apenas o Banco PostgreSQL no Docker e Rodar a API Localmente
-Ideal para desenvolvimento ágil com auto-reload e debugging:
+Ideal para desenvolvimento diário com auto-reload e depuração:
 
 1. **Subir exclusivamente o container do PostgreSQL**:
    ```bash
    docker compose up -d postgres
    ```
-   *O PostgreSQL inicializará na porta 5432 executando automaticamente o script `schema.sql` com tabelas, índices e seeds.*
+   *O PostgreSQL inicializará executando automaticamente o script `schema.sql` com tabelas, índices e seeds iniciais.*
 
 2. **Executar a API localmente no terminal**:
    ```bash
@@ -150,14 +181,14 @@ Ideal para desenvolvimento ágil com auto-reload e debugging:
 
 ---
 
-## 💻 4. Passo a Passo EXATO: Como Rodar Localmente (Bare Metal)
+## 💻 5. Passo a Passo EXATO: Como Rodar Localmente (Bare Metal)
 
 Se você preferir rodar a aplicação diretamente no sistema operacional:
 
 ### 1. Pré-requisitos
 - **Node.js**: versão 20.x ou 22.x instalada (`node -v`).
 - **NPM**: versão 10.x ou superior (`npm -v`).
-- **PostgreSQL 16**: rodando localmente na porta 5432 (ou via container Docker `docker compose up -d postgres`).
+- **PostgreSQL 16**: rodando localmente (ou via container `docker compose up -d postgres`).
 
 ### 2. Configurar Variáveis de Ambiente
 Crie o arquivo `.env` a partir do `.env.example`:
@@ -172,11 +203,10 @@ npm install
 ```
 
 ### 4. Inicializar o Banco de Dados PostgreSQL
-Crie o banco de dados `pollen_afiliados` e execute o script `schema.sql`:
+Caso não use o container do Docker, execute o script `schema.sql`:
 ```bash
 psql -U postgres -h localhost -d pollen_afiliados -f schema.sql
 ```
-*(Ou utilize o comando rápido do Docker para subir o banco já inicializado: `docker compose up -d postgres`)*
 
 ### 5. Iniciar o Servidor
 
@@ -194,49 +224,56 @@ A API estará acessível em: `http://localhost:3001`
 
 ---
 
-## 🧪 5. Executar os Testes Automatizados
+## 🧪 6. Executar os Testes Automatizados
 
-A suíte de testes de controle de qualidade (QA) foi construída sobre o test runner nativo do Node.js:
+A suíte de testes de controle de qualidade (QA) utiliza o test runner nativo do Node.js (`node --test`), garantindo máxima velocidade e sem dependências externas:
 
 ```bash
 npm test
 ```
 
-### Baterias de Teste Inclusas:
-1. `tests/apiContracts.test.js`: Validação estrutural de todos os contratos, atores e Histórias de Usuário.
-2. `tests/businessRules.test.js`: Validação das regras de transição (5 assinaturas, vigência de 12 meses, alerta de 60 dias, empresas internacionais).
-3. `tests/contractGenerator.test.js`: Validação do gerador automático de termos de adesão e substituição de variáveis.
-4. `tests/modelsValidation.test.js`: Validação da convenção de nomes, convenção snake_case, propriedades e relacionamentos declarados nos models.
-5. `tests/schemaValidation.test.js`: Validação do script DDL `schema.sql` (UUIDv4, triggers de timestamp, 8 tabelas e integridade referencial).
-6. `tests/serverHealth.test.js`: Validação de integridade do Dockerfile, docker-compose.yml, rotas nos 3 prefixos e inicialização do servidor.
+### Resultados da Suíte (100% de Aprovação):
+```
+✔ Bateria de Testes QA: Validação dos Contratos de API (Passo 1)
+✔ Bateria de Testes QA: Regras de Negócio e Transições de Estado
+✔ Bateria de Testes QA: Gerador de Minutas Contratuais
+✔ Bateria de Testes QA: Validação dos Models Refatorados (Regras da Skill)
+✔ Bateria de Testes QA: Validação do Schema SQL (Passo 2)
+✔ Bateria de Testes QA: Integridade da Infraestrutura, Docker e Servidor
+ℹ tests 28
+ℹ suites 6
+ℹ pass 28
+ℹ fail 0
+```
 
 ---
 
-## ⚙️ 6. Variáveis de Ambiente
+## ⚙️ 7. Variáveis de Ambiente
 
 As configurações são lidas do arquivo `.env` na raiz:
 
 | Variável | Tipo | Obrigatória? | Padrão | Descrição |
 | :--- | :--- | :---: | :--- | :--- |
-| `PORT` | Inteiro | Não | `3001` | Porta TCP na qual o servidor Express escuta conexões HTTP. |
+| `PORT` | Inteiro | Não | `3001` | Porta TCP do servidor Express. |
 | `NODE_ENV` | String | Não | `development` | Ambiente de execução (`development`, `production`, `test`). |
 | `DATABASE_URL` | String | **Sim** (ou `DB_*`) | `postgres://postgres:postgres@localhost:5432/pollen_afiliados` | URI de conexão oficial do PostgreSQL. |
 | `DB_DIALECT` | String | Não | `postgres` | Dialeto do banco (PostgreSQL obrigatório). |
 | `DB_HOST` | String | Não | `localhost` | Host do banco (usado caso `DATABASE_URL` não seja informada). |
-| `DB_PORT` | Inteiro | Não | `5432` | Porta do PostgreSQL. |
-| `DB_USER` | String | Não | `postgres` | Usuário do PostgreSQL. |
-| `DB_PASSWORD` | String | Não | `postgres` | Senha do PostgreSQL. |
-| `DB_NAME` | String | Não | `pollen_afiliados` | Nome da base de dados relacional. |
-| `CORS_ORIGIN` | String | Não | `http://localhost:3000` | Origens permitidas para requisições cross-origin (Next.js frontend). |
+| `DB_PORT` | Inteiro | Não | `5432` | Porta do PostgreSQL interno do container. |
+| `POSTGRES_PORT` | Inteiro | Não | `5433` | Porta externa do host mapeada no Docker (evita conflito com PostgreSQL local na 5432). |
+| `POSTGRES_USER` | String | Não | `postgres` | Usuário do PostgreSQL no container. |
+| `POSTGRES_PASSWORD`| String | Não | `postgres` | Senha do PostgreSQL no container. |
+| `POSTGRES_DB` | String | Não | `pollen_afiliados` | Nome da base de dados relacional. |
+| `CORS_ORIGIN` | String | Não | `*` | Origens permitidas para requisições cross-origin (Next.js frontend). |
 | `UPLOAD_DIR` | String | Não | `./uploads` | Diretório em disco para guarda de certidões e editais enviados via multipart. |
 
 ---
 
-## 🛣️ 7. Mapa de Endpoints da API RESTful
+## 🛣️ 8. Mapa de Endpoints da API RESTful
 
 A API expõe rotas acessíveis com os prefixos `/api/v1`, `/api` e diretamente na raiz `/`:
 
-### 🏢 Empresas e Afiliadas (`/companies`)
+### 🏢 Empresas e Afiliadas (`/companies` ou `/empresas`)
 - `GET /api/v1/companies` — Lista empresas paginadas com filtros por `status`, `tipo` e busca textual (`search`).
 - `POST /api/v1/companies` — Cadastra uma nova empresa e instancia automaticamente o checklist de 5 assinaturas.
 - `GET /api/v1/companies/:id` — Visão 360° da empresa com carregamento de contratos, assinaturas, faturas, documentos e espaços.
@@ -248,7 +285,7 @@ A API expõe rotas acessíveis com os prefixos `/api/v1`, `/api` e diretamente n
 ### ✍️ Checklist de Assinaturas (`/companies/:id/signatures`)
 - `GET /api/v1/companies/:id/signatures` — Retorna o status individual dos 5 signatários do convênio.
 - `PUT /api/v1/companies/:id/signatures/:tipo` — Registra a assinatura de um signatário individual.
-  - *Se os 5 signatários confirmarem, a empresa transiciona automaticamente para `AGUARDANDO_PAGAMENTO`.*
+  - *Ao completar as 5 assinaturas, a empresa transiciona automaticamente para `AGUARDANDO_PAGAMENTO`.*
 
 ### 💰 Módulo Financeiro e Contábil (`/financial`)
 - `GET /api/v1/financial/invoices` — Lista faturas com filtros opcionais por empresa e status (`PENDENTE`, `PAGO`, `ATRASADO`).
@@ -286,7 +323,7 @@ A API expõe rotas acessíveis com os prefixos `/api/v1`, `/api` e diretamente n
 
 ---
 
-## 🔒 8. Regras de Negócio Implementadas
+## 🔒 9. Regras de Negócio e Conformidade Legal
 
 1. **Protocolo de 5 Assinaturas Obrigatórias:**
    - 1. Representante Legal da Empresa
@@ -307,9 +344,17 @@ A API expõe rotas acessíveis com os prefixos `/api/v1`, `/api` e diretamente n
 
 ---
 
-## 👨‍💻 9. Responsabilidade Técnica e Manutenção
+## 📋 10. Auditoria e Governança Técnica
+
+Para consultar o relatório detalhado de conformidade e decisões de arquitetura:
+- 📄 [Relatório de Auditoria Arquitetural](./docs/relatorio_auditoria.md)
+- 📄 [ADR-001: Arquitetura e Decisões Técnicas](./docs/ADR-001-arquitetura.md)
+- 📄 [Manual de Rotas da API](./docs/rotas_api.md)
+
+---
+
+## 👨‍💻 11. Responsabilidade Técnica
 
 - **Engenharia e Arquitetura:** Equipe de Engenharia Pollen Parque
 - **Licença:** ISC
 - **Repositório:** `orquestrador-ia-crs/back`
-
