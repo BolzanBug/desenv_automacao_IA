@@ -70,9 +70,11 @@ const AssinaturaContrato = sequelize.define('assinaturas_contrato', {
 });
 
 // Relacionamentos declarados no próprio Model
+setTimeout(() => {
 AssinaturaContrato.belongsTo(Empresa, {
   as: 'empresa',
   foreignKey: { name: 'empresaId', field: 'empresa_id' }
 });
+}, 0);
 
 export default AssinaturaContrato;

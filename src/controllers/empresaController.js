@@ -349,5 +349,6 @@ export default {
   update,
   updateStatus,
   generateContract,
-  remove
+  remove,
+  destroy: remove
 };

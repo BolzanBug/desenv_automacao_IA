@@ -50,7 +50,7 @@ O presente ciclo SDLC entregou uma **solução digital integrada de ponta a pont
 
 ### 3.2. Backend Node.js / Express (ES Modules)
 - `backend/src/server.js`: Servidor Express com suporte a CORS, parser JSON, tratamento global de erros e inicialização resiliente.
-- `backend/src/config/database.js`: Conexão Sequelize resiliente (PostgreSQL prioritário com fallback transparente para SQLite).
+- `backend/src/config/database.js`: Conexão Sequelize resiliente (PostgreSQL estrito, sem fallbacks para garantir integridade estrutural).
 - `backend/src/models/`:
   - `Empresa.js`: Entidade cadastral mestre com flags de alteração contratual e tipagem.
   - `ContratoMinuta.js`: Histórico de versões dos termos gerados automaticamente.
@@ -86,7 +86,7 @@ O presente ciclo SDLC entregou uma **solução digital integrada de ponta a pont
 | **Integração Jurídica** | Liberação prematura de faturamento antes do término das 5 assinaturas. | Bloqueio automático de transição de status: a empresa só avança para `AGUARDANDO_PAGAMENTO` quando os 5 signatários confirmarem. |
 | **Contabilidade** | Perda de controle sobre quem confirmou recebimento de pagamentos. | A tabela `faturas_financeiras` armazena obrigatoriamente `operador_baixa`, `data_pagamento` e `forma_pagamento`. |
 | **Internacionalização** | Bloqueio de empresas estrangeiras por validação rígida de CNPJ. | Modelagem condicional: empresas internacionais utilizam `identificador_internacional` e o formulário adapta os campos dinamicamente. |
-| **Infraestrutura** | Falha de inicialização em ambientes onde o PostgreSQL não está ativo. | O `database.js` possui mecanismo de fallback automático com SQLite em arquivo local. |
+| **Infraestrutura** | Falha de inicialização por ausência de banco de dados. | O `database.js` exige PostgreSQL nativo e realiza validações robustas com `sequelize.authenticate()`. |
 
 ---
 

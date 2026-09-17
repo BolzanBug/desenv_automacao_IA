@@ -55,9 +55,11 @@ const ComunicacaoHistorico = sequelize.define('comunicacoes_historico', {
 });
 
 // Relacionamentos declarados no próprio Model
+setTimeout(() => {
 ComunicacaoHistorico.belongsTo(Empresa, {
   as: 'empresa',
   foreignKey: { name: 'empresaId', field: 'empresa_id' }
 });
+}, 0);
 
 export default ComunicacaoHistorico;

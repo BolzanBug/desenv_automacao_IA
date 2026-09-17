@@ -20,10 +20,13 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-export default (router) => {
-  router.get('/companies/:id/documents', documentoController.getByEmpresa);
-  router.post('/companies/:id/documents', upload.single('file'), documentoController.uploadDocument);
-  router.patch('/documents/:docId/status', documentoController.updateStatus);
-  router.delete('/documents/:docId', documentoController.removeDocument);
-};
+export default (app) => {
+  app.get('/companies/:id/documents', documentoController.getByEmpresa);
+  app.post('/companies/:id/documents', upload.single('file'), documentoController.uploadDocument);
+  app.patch('/documents/:docId/status', documentoController.updateStatus);
+  app.delete('/documents/:docId', documentoController.removeDocument);
 
+  // Aliases em português
+  app.get('/empresas/:id/documentos', documentoController.getByEmpresa);
+  app.post('/empresas/:id/documentos', upload.single('file'), documentoController.uploadDocument);
+};

@@ -8,7 +8,7 @@ FROM node:22-alpine
 # Diretório de trabalho
 WORKDIR /app
 
-# Instalação de dependências de compilação para pacotes nativos (sqlite3, etc)
+# Instalação de dependências de compilação para pacotes nativos
 RUN apk add --no-cache python3 make g++
 
 # Copiar descritores de dependências

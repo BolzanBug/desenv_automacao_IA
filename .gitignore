@@ -8,6 +8,4 @@ artefatos/backend/uploads/*
 artefatos/frontend/node_modules/
 artefatos/frontend/.next/
 .DS_Store
-
 node_modules/
-package-lock.json

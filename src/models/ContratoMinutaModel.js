@@ -63,6 +63,7 @@ const ContratoMinuta = sequelize.define('contratos_minutas', {
 });
 
 // Relacionamentos declarados no próprio Model
+setTimeout(() => {
 ContratoMinuta.belongsTo(Empresa, {
   as: 'empresa',
   foreignKey: { name: 'empresaId', field: 'empresa_id' }
@@ -73,5 +74,6 @@ ContratoMinuta.hasMany(AssinaturaContrato, {
   foreignKey: { name: 'contratoId', field: 'contrato_id' },
   onDelete: 'SET NULL'
 });
+}, 0);
 
 export default ContratoMinuta;

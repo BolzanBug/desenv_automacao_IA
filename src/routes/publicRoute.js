@@ -1,6 +1,6 @@
 import publicController from '../controllers/publicController.js';
 
-export default (router) => {
-  router.post('/public/register', publicController.publicRegister);
+export default (app) => {
+  app.post('/public/register', publicController.publicRegister);
+  app.post('/public/inscricao', publicController.publicRegister);
 };
-
