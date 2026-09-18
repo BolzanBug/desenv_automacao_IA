@@ -179,6 +179,56 @@
       "businessRules": [
         "Os dados do dashboard devem refletir os registros em tempo real."
       ]
+    },
+    {
+      "id": "US11",
+      "title": "Autoatendimento Web para Empresas Não-Residentes (Substituição de Formulário PDF)",
+      "actor": "Empresa Proponente / Afiliada Não-Residente",
+      "description": "Como proponente a afiliada não-residente do Pollen Parque, desejo preencher um formulário web público completo com os 16 campos cadastrais oficiais (substituindo o formulário PDF 'dasd.pdf'), para submeter o pedido de adesão diretamente pelo sistema com validações em tempo real.",
+      "acceptanceCriteria": [
+        "O formulário deve coletar e validar os 16 campos cadastrais oficiais: Razão Social, Nome Fantasia, CNPJ, Ano de Fundação, Área de Atuação, E-mail de Contato, E-mail de Cobrança, Telefone da Empresa, Site, Endereço Completo, Cidade, Estado, CEP, Nome do Representante Legal, CPF, E-mail, Telefone, Endereço Residencial e Cargo/Função.",
+        "Disponível publicamente sem autenticação nas rotas /companies/nao-residente, /empresas/nao-residente e /public/nao-residente.",
+        "Gravação automática com residente: false, tipo: EXTERNA e vinculação automática do checklist dos 5 signatários oficiais.",
+        "Retorno HTTP 201 com dados confirmados e protocolo de inscrição para acompanhamento."
+      ],
+      "businessRules": [
+        "CNPJ deve ser validado e único na base de dados.",
+        "Empresas não-residentes recebem obrigatoriamente a flag residente: false e categoria EXTERNA.",
+        "Compatibilidade total de payloads em camelCase e snake_case."
+      ]
+    },
+    {
+      "id": "US12",
+      "title": "Geração Automatizada e Híbrida de Minutas Contratuais (PDF via DOCX / Markdown)",
+      "actor": "Equipe do Programa Pollen",
+      "description": "Como operador do programa de afiliados, desejo gerar minutas contratuais oficiais preenchidas a partir do cadastro da empresa, convertendo modelo DOCX para PDF via LibreOffice (com fallback seguro em caso de ausência do conversor) para não-residentes e gerando Markdown para residentes.",
+      "acceptanceCriteria": [
+        "Para empresas não-residentes (residente: false), mesclar todos os dados cadastrais (Razão Social, CNPJ, Endereço, Representante, CPF, Valor por extenso, emails de cobrança/contato e datas) no modelo DOCX e converter para PDF.",
+        "Disponibilizar fallback resiliente: se LibreOffice estiver indisponível no ambiente de execução, salvar e disponibilizar o arquivo DOCX preenchido sem retornar erro 500.",
+        "A minuta gerada deve ser registrada automaticamente na tabela documentos_anexos com status APROVADO, ficando acessível na aba de documentos.",
+        "Suporte a rotas equivalentes /companies/:id/contract/generate e /empresas/:id/contract/generate.",
+        "Para empresas residentes (residente: true), manter geração em Markdown estruturado."
+      ],
+      "businessRules": [
+        "Valor padrão da anuidade é R$ 3.600,00, aceitando customização na requisição.",
+        "O caminho do arquivo modelo deve ser absoluto e independente do diretório de trabalho.",
+        "Status da empresa avança automaticamente para MINUTA_GERADA."
+      ]
+    },
+    {
+      "id": "US13",
+      "title": "Visualização Híbrida e Download de Minutas no Painel e Portal da Afiliada",
+      "actor": "Equipe do Programa / Empresa Afiliada",
+      "description": "Como operador do sistema ou empresa afiliada, desejo visualizar o documento gerado (PDF incorporado ou texto formatado) e realizar o download direto do PDF/DOCX gerado no painel e no portal da empresa afiliada.",
+      "acceptanceCriteria": [
+        "Detecção automática do formato através do prefixo [PDF GERADO] em conteudoGerado.",
+        "Para minutas PDF, renderização de preview via iframe/object e botão de download direto para /uploads/contratos/.",
+        "Para minutas Markdown, exibição estilizada com visual de documento jurídico.",
+        "Disponibilização da minuta tanto na aba de contratos quanto na listagem de documentos anexos."
+      ],
+      "businessRules": [
+        "A empresa afiliada autenticada no portal restrito acessa exclusivamente seus próprios documentos."
+      ]
     }
   ],
   "apiContracts": [
@@ -187,11 +237,36 @@
       "method": "GET",
       "summary": "Listar todas as empresas com filtros e paginação",
       "queryParams": [
-        { "name": "status", "type": "string", "required": false, "description": "Filtro por status (ex: ATIVO, EM_ANALISE)" },
-        { "name": "tipo", "type": "string", "required": false, "description": "Filtro por tipo (STARTUP, PME, GRANDE_PORTE, INTERNACIONAL)" },
-        { "name": "search", "type": "string", "required": false, "description": "Busca textual por razão social, nome fantasia ou CNPJ" },
-        { "name": "page", "type": "integer", "required": false, "default": 1 },
-        { "name": "limit", "type": "integer", "required": false, "default": 20 }
+        {
+          "name": "status",
+          "type": "string",
+          "required": false,
+          "description": "Filtro por status (ex: ATIVO, EM_ANALISE)"
+        },
+        {
+          "name": "tipo",
+          "type": "string",
+          "required": false,
+          "description": "Filtro por tipo (STARTUP, PME, GRANDE_PORTE, INTERNACIONAL)"
+        },
+        {
+          "name": "search",
+          "type": "string",
+          "required": false,
+          "description": "Busca textual por razão social, nome fantasia ou CNPJ"
+        },
+        {
+          "name": "page",
+          "type": "integer",
+          "required": false,
+          "default": 1
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "required": false,
+          "default": 20
+        }
       ],
       "responses": {
         "200": {
@@ -219,7 +294,9 @@
             }
           }
         },
-        "500": { "description": "Erro interno de processamento" }
+        "500": {
+          "description": "Erro interno de processamento"
+        }
       }
     },
     {
@@ -258,10 +335,15 @@
           "description": "Empresa cadastrada com sucesso",
           "example": {
             "message": "Empresa cadastrada com sucesso",
-            "data": { "id": "8f3b20c1-5c3a-4e2b-bdf0-4b2a6f87d101", "status": "EM_ANALISE" }
+            "data": {
+              "id": "8f3b20c1-5c3a-4e2b-bdf0-4b2a6f87d101",
+              "status": "EM_ANALISE"
+            }
           }
         },
-        "400": { "description": "Dados inválidos ou CNPJ já cadastrado" }
+        "400": {
+          "description": "Dados inválidos ou CNPJ já cadastrado"
+        }
       }
     },
     {
@@ -269,7 +351,11 @@
       "method": "GET",
       "summary": "Obter visão 360° da empresa (dados, assinaturas, faturas, documentos, espaços)",
       "parameters": [
-        { "name": "id", "type": "UUID", "required": true }
+        {
+          "name": "id",
+          "type": "UUID",
+          "required": true
+        }
       ],
       "responses": {
         "200": {
@@ -288,17 +374,28 @@
             }
           }
         },
-        "404": { "description": "Empresa não encontrada" }
+        "404": {
+          "description": "Empresa não encontrada"
+        }
       }
     },
     {
       "endpoint": "/api/v1/companies/:id",
       "method": "PUT",
       "summary": "Atualizar cadastro da empresa",
-      "requestBody": { "required": true, "content": { "application/json": {} } },
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {}
+        }
+      },
       "responses": {
-        "200": { "description": "Empresa atualizada com sucesso" },
-        "404": { "description": "Empresa não encontrada" }
+        "200": {
+          "description": "Empresa atualizada com sucesso"
+        },
+        "404": {
+          "description": "Empresa não encontrada"
+        }
       }
     },
     {
@@ -306,17 +403,28 @@
       "method": "PATCH",
       "summary": "Alterar status operacional da empresa",
       "requestBody": {
-        "schema": { "status": "string (EM_ANALISE | MINUTA_GERADA | EM_ASSINATURA | AGUARDANDO_PAGAMENTO | ATIVO | INADIMPLENTE | VENCIDO | SUSPENSO | DESLIGADO)", "justificativa": "string" }
+        "schema": {
+          "status": "string (EM_ANALISE | MINUTA_GERADA | EM_ASSINATURA | AGUARDANDO_PAGAMENTO | ATIVO | INADIMPLENTE | VENCIDO | SUSPENSO | DESLIGADO)",
+          "justificativa": "string"
+        }
       },
       "responses": {
-        "200": { "description": "Status alterado com sucesso" }
+        "200": {
+          "description": "Status alterado com sucesso"
+        }
       }
     },
     {
       "endpoint": "/api/v1/companies/:id/contract/generate",
       "method": "POST",
-      "summary": "Gerar automaticamente a minuta oficial preenchida do contrato",
-      "parameters": [{ "name": "id", "type": "UUID", "required": true }],
+      "summary": "Gerar automaticamente a minuta oficial preenchida do contrato (PDF para não-residentes, Markdown para residentes)",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "required": true
+        }
+      ],
       "requestBody": {
         "schema": {
           "valor_anuidade": "number (opcional, padrão do edital)",
@@ -327,17 +435,23 @@
         "201": {
           "description": "Minuta contratual gerada com sucesso",
           "example": {
-            "message": "Minuta gerada com sucesso",
+            "message": "Minuta contratual gerada com sucesso a partir dos dados da empresa",
             "data": {
-              "empresa_id": "8f3b20c1-5c3a-4e2b-bdf0-4b2a6f87d101",
-              "titulo": "TERMO DE ADESÃO AO PROGRAMA DE AFILIADOS POLLEN PARQUE Nº 042/2026",
-              "conteudo_gerado": "Pelo presente instrumento...",
+              "id": "e0e2d5a3-b541-4770-8b01-526bfd2f1f0a",
+              "empresaId": "8f3b20c1-5c3a-4e2b-bdf0-4b2a6f87d101",
+              "numeroTermo": "TERMO-EXTERNO/2026/8f3b20c1",
+              "titulo": "Contrato de Afiliação Não Residente — TECH SOLUÇÕES LTDA",
+              "conteudoGerado": "[PDF GERADO] /uploads/contratos/contrato_8f3b20c1-5c3a-4e2b-bdf0-4b2a6f87d101.pdf",
+              "valorAnuidade": "3600.00",
               "status": "GERADO",
-              "gerado_em": "2026-09-16T14:45:00.000Z"
+              "documentoAnexoCriado": true
             }
           }
         }
-      }
+      },
+      "aliases": [
+        "/api/v1/empresas/:id/contract/generate"
+      ]
     },
     {
       "endpoint": "/api/v1/companies/:id/signatures",
@@ -349,11 +463,36 @@
           "example": {
             "message": "Assinaturas consultadas",
             "data": [
-              { "signatario_tipo": "REPRESENTANTE_LEGAL", "nome": "Carlos Silva", "assinado": true, "data_assinatura": "2026-09-12T10:00:00Z" },
-              { "signatario_tipo": "INSTITUCIONAL_1", "nome": "Diretoria Pollen", "assinado": true, "data_assinatura": "2026-09-13T11:00:00Z" },
-              { "signatario_tipo": "INSTITUCIONAL_2", "nome": "Coordenação de Inovação", "assinado": true, "data_assinatura": "2026-09-13T15:00:00Z" },
-              { "signatario_tipo": "INSTITUCIONAL_3", "nome": "Procuradoria Jurídica", "assinado": true, "data_assinatura": "2026-09-14T09:30:00Z" },
-              { "signatario_tipo": "REITOR", "nome": "Reitor em Exercício", "assinado": false, "data_assinatura": null }
+              {
+                "signatario_tipo": "REPRESENTANTE_LEGAL",
+                "nome": "Carlos Silva",
+                "assinado": true,
+                "data_assinatura": "2026-09-12T10:00:00Z"
+              },
+              {
+                "signatario_tipo": "INSTITUCIONAL_1",
+                "nome": "Diretoria Pollen",
+                "assinado": true,
+                "data_assinatura": "2026-09-13T11:00:00Z"
+              },
+              {
+                "signatario_tipo": "INSTITUCIONAL_2",
+                "nome": "Coordenação de Inovação",
+                "assinado": true,
+                "data_assinatura": "2026-09-13T15:00:00Z"
+              },
+              {
+                "signatario_tipo": "INSTITUCIONAL_3",
+                "nome": "Procuradoria Jurídica",
+                "assinado": true,
+                "data_assinatura": "2026-09-14T09:30:00Z"
+              },
+              {
+                "signatario_tipo": "REITOR",
+                "nome": "Reitor em Exercício",
+                "assinado": false,
+                "data_assinatura": null
+              }
             ]
           }
         }
@@ -364,10 +503,16 @@
       "method": "PUT",
       "summary": "Atualizar status de assinatura de um signatário específico",
       "requestBody": {
-        "schema": { "assinado": "boolean", "nome": "string", "observacoes": "string" }
+        "schema": {
+          "assinado": "boolean",
+          "nome": "string",
+          "observacoes": "string"
+        }
       },
       "responses": {
-        "200": { "description": "Status de assinatura atualizado" }
+        "200": {
+          "description": "Status de assinatura atualizado"
+        }
       }
     },
     {
@@ -375,7 +520,9 @@
       "method": "GET",
       "summary": "Listar documentos anexados da empresa",
       "responses": {
-        "200": { "description": "Lista de documentos cadastrados" }
+        "200": {
+          "description": "Lista de documentos cadastrados"
+        }
       }
     },
     {
@@ -390,7 +537,9 @@
         }
       },
       "responses": {
-        "201": { "description": "Documento salvo com sucesso" }
+        "201": {
+          "description": "Documento salvo com sucesso"
+        }
       }
     },
     {
@@ -398,11 +547,19 @@
       "method": "GET",
       "summary": "Listar faturas e controle contábil (substitui aba laranja)",
       "queryParams": [
-        { "name": "empresa_id", "type": "UUID" },
-        { "name": "status", "type": "string (PENDENTE | PAGO | ATRASADO | CANCELADO)" }
+        {
+          "name": "empresa_id",
+          "type": "UUID"
+        },
+        {
+          "name": "status",
+          "type": "string (PENDENTE | PAGO | ATRASADO | CANCELADO)"
+        }
       ],
       "responses": {
-        "200": { "description": "Lista de faturas" }
+        "200": {
+          "description": "Lista de faturas"
+        }
       }
     },
     {
@@ -424,7 +581,9 @@
         }
       },
       "responses": {
-        "201": { "description": "Fatura cadastrada com sucesso" }
+        "201": {
+          "description": "Fatura cadastrada com sucesso"
+        }
       }
     },
     {
@@ -441,7 +600,9 @@
         }
       },
       "responses": {
-        "200": { "description": "Baixa contábil confirmada e status da empresa atualizado" }
+        "200": {
+          "description": "Baixa contábil confirmada e status da empresa atualizado"
+        }
       }
     },
     {
@@ -449,7 +610,9 @@
       "method": "GET",
       "summary": "Consultar histórico de mensagens enviadas",
       "responses": {
-        "200": { "description": "Histórico retornado com sucesso" }
+        "200": {
+          "description": "Histórico retornado com sucesso"
+        }
       }
     },
     {
@@ -466,7 +629,9 @@
         }
       },
       "responses": {
-        "200": { "description": "Disparo executado e registrado no histórico" }
+        "200": {
+          "description": "Disparo executado e registrado no histórico"
+        }
       }
     },
     {
@@ -474,7 +639,9 @@
       "method": "GET",
       "summary": "Listar espaços físicos e ocupações",
       "responses": {
-        "200": { "description": "Lista de salas e postos de coworking com status" }
+        "200": {
+          "description": "Lista de salas e postos de coworking com status"
+        }
       }
     },
     {
@@ -492,7 +659,9 @@
         }
       },
       "responses": {
-        "201": { "description": "Espaço cadastrado/alocado com sucesso" }
+        "201": {
+          "description": "Espaço cadastrado/alocado com sucesso"
+        }
       }
     },
     {
@@ -505,7 +674,7 @@
           "example": {
             "total_afiliados_ativos": 22,
             "total_em_processo": 26,
-            "faturamento_pendente_total": 45000.00,
+            "faturamento_pendente_total": 45000.0,
             "faturas_vencidas_inadimplentes": 3,
             "vigencias_vencendo_60_dias": 5,
             "ocupacao_espacos_percentual": 78.5,
@@ -536,9 +705,74 @@
         }
       },
       "responses": {
-        "201": { "description": "Cadastro recebido com sucesso via autoatendimento" }
+        "201": {
+          "description": "Cadastro recebido com sucesso via autoatendimento"
+        }
+      }
+    },
+    {
+      "endpoint": "/api/v1/companies/nao-residente",
+      "aliases": [
+        "/api/v1/empresas/nao-residente",
+        "/api/v1/public/nao-residente"
+      ],
+      "method": "POST",
+      "summary": "Cadastro público de autoatendimento para empresa não-residente (substitui dasd.pdf)",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "razaoSocial": "string (obrigatório, aceita snake_case)",
+              "nomeFantasia": "string",
+              "cnpj": "string (obrigatório)",
+              "emailContato": "string (email válido, obrigatório)",
+              "telefone": "string (telefone/WhatsApp da empresa)",
+              "enderecoCompleto": "string (endereço completo da empresa)",
+              "cidade": "string",
+              "estado": "string (UF)",
+              "cep": "string",
+              "pais": "string (padrão: Brasil)",
+              "representanteNome": "string (obrigatório)",
+              "representanteCpf": "string (obrigatório)",
+              "representanteCargo": "string (cargo/função na empresa)",
+              "representanteEndereco": "string (endereço residencial completo)",
+              "representanteEmail": "string",
+              "representanteTelefone": "string",
+              "anoFundacao": "integer",
+              "areaAtuacao": "string",
+              "emailCobranca": "string (email para faturas e boletos)",
+              "site": "string (site ou rede social)"
+            }
+          }
+        }
+      },
+      "responses": {
+        "201": {
+          "description": "Empresa não-residente cadastrada com sucesso e 5 signatários vinculados",
+          "example": {
+            "message": "Empresa cadastrada com sucesso",
+            "data": {
+              "id": "e0e2d5a3-b541-4770-8b01-526bfd2f1f0a",
+              "razaoSocial": "Tech Soluções Ltda",
+              "nomeFantasia": "Tech Soluções",
+              "cnpj": "12.345.678/0001-99",
+              "residente": false,
+              "tipo": "EXTERNA",
+              "status": "EM_ANALISE",
+              "emailContato": "contato@tech.com",
+              "emailCobranca": "financeiro@tech.com",
+              "representanteNome": "João da Silva"
+            }
+          }
+        },
+        "400": {
+          "description": "Campos obrigatórios ausentes ou CNPJ já existente"
+        },
+        "500": {
+          "description": "Erro interno ao cadastrar empresa"
+        }
       }
     }
   ]
 }
-

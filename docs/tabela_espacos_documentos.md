@@ -43,4 +43,6 @@ Este documento detalha o funcionamento de duas entidades cruciais para a operaç
 
 ### Regras de Negócio:
 - Toda empresa em fase de ingresso deve possuir os documentos do edital aprovados antes do envio para assinatura final do Reitor.
+- **Registro Automático de Minutas:** Minutas contratuais geradas em PDF/DOCX são registradas automaticamente nesta tabela com tipo `MINUTA_ASSINADA` e `status_conferencia = 'APROVADO'`, ficando disponíveis para download na visão 360° e no Portal da Afiliada.
+
 

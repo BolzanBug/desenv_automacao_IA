@@ -190,12 +190,27 @@ const persist = async (req, res) => {
 
 const registerNonResident = async (req, res) => {
   try {
-    const {
-      razaoSocial, nomeFantasia, cnpj, identificadorInternacional,
-      emailContato, telefone, enderecoCompleto, cidade, estado, cep, pais,
-      representanteNome, representanteCpf, representanteEmail, representanteTelefone,
-      representanteEndereco, representanteCargo, anoFundacao, areaAtuacao, emailCobranca, site
-    } = req.body;
+    const razaoSocial = req.body.razaoSocial || req.body.razao_social;
+    const nomeFantasia = req.body.nomeFantasia || req.body.nome_fantasia;
+    const cnpj = req.body.cnpj;
+    const identificadorInternacional = req.body.identificadorInternacional || req.body.identificador_internacional;
+    const emailContato = req.body.emailContato || req.body.email_contato;
+    const emailCobranca = req.body.emailCobranca || req.body.email_cobranca || emailContato;
+    const telefone = req.body.telefone;
+    const enderecoCompleto = req.body.enderecoCompleto || req.body.endereco_completo;
+    const cidade = req.body.cidade;
+    const estado = req.body.estado;
+    const cep = req.body.cep;
+    const pais = req.body.pais || 'Brasil';
+    const representanteNome = req.body.representanteNome || req.body.representante_nome;
+    const representanteCpf = req.body.representanteCpf || req.body.representante_cpf;
+    const representanteEmail = req.body.representanteEmail || req.body.representante_email || emailContato;
+    const representanteTelefone = req.body.representanteTelefone || req.body.representante_telefone || telefone;
+    const representanteEndereco = req.body.representanteEndereco || req.body.representante_endereco;
+    const representanteCargo = req.body.representanteCargo || req.body.representante_cargo;
+    const anoFundacao = req.body.anoFundacao || req.body.ano_fundacao;
+    const areaAtuacao = req.body.areaAtuacao || req.body.area_atuacao;
+    const site = req.body.site;
 
     if (!razaoSocial || !emailContato || !representanteNome) {
       return res.status(400).send({
@@ -232,8 +247,8 @@ const registerNonResident = async (req, res) => {
       pais,
       representanteNome,
       representanteCpf,
-      representanteEmail: representanteEmail || emailContato,
-      representanteTelefone: representanteTelefone || telefone,
+      representanteEmail,
+      representanteTelefone,
       representanteEndereco,
       representanteCargo,
       anoFundacao,
@@ -391,8 +406,20 @@ const generateContract = async (req, res) => {
         status: 'GERADO'
       });
 
-      // Se existir a tabela de anexos, registra o PDF nela (opcional)
-      // await DocumentoAnexo.create(...)
+      // Registra a minuta gerada na tabela de anexos da empresa
+      try {
+        await DocumentoAnexo.create({
+          empresaId: empresa.id,
+          tipo: 'MINUTA_ASSINADA',
+          nomeOriginal: pdfData.nome_original,
+          caminhoArquivo: pdfData.caminho_arquivo,
+          mimeType: pdfData.mime_type || (pdfData.is_docx ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : 'application/pdf'),
+          tamanhoBytes: pdfData.tamanho_bytes || null,
+          statusConferencia: 'APROVADO'
+        });
+      } catch (docErr) {
+        console.warn('Aviso: Não foi possível registrar o anexo da minuta automaticamente:', docErr.message);
+      }
       
     } else {
       // Se residente, usa o motor Markdown antigo

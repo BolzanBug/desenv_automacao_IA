@@ -45,7 +45,54 @@
 - **Descrição:** Transição formal de status da empresa (ex: de `SUSPENSO` para `ATIVO` ou para `DESLIGADO`), registrando log de auditoria.
 
 ### 1.6. `POST /api/v1/companies/:id/contract/generate`
-- **Descrição:** Gera a minuta oficial substituindo os placeholders pelos dados reais da empresa e cria o registro em `contratos_minutas`. Atualiza a empresa para `MINUTA_GERADA`.
+- **Aliases:** `POST /api/v1/empresas/:id/contract/generate`
+- **Descrição:** Gera a minuta oficial preenchida do contrato.
+  - **Empresas Não-Residentes (`residente: false`):** Preenche o modelo oficial DOCX (`src/templates/modelo_minuta_afiliados.docx`) com todas as variáveis da empresa, do representante legal, da anuidade e datas, convertendo para PDF via LibreOffice (com fallback seguro para DOCX se o motor estiver indisponível). O arquivo é registrado automaticamente na tabela `documentos_anexos` com status `APROVADO`.
+  - **Empresas Residentes (`residente: true`):** Mantém a geração do contrato estruturado em Markdown.
+- **Retorno:**
+  ```json
+  {
+    "message": "Minuta contratual gerada com sucesso a partir dos dados da empresa",
+    "data": {
+      "id": "e0e2d5a3-...",
+      "empresaId": "...",
+      "numeroTermo": "TERMO-EXTERNO/2026/...",
+      "titulo": "Contrato de Afiliação Não Residente — EMPRESA LTDA",
+      "conteudoGerado": "[PDF GERADO] /uploads/contratos/contrato_uuid.pdf",
+      "valorAnuidade": "3600.00",
+      "status": "GERADO"
+    }
+  }
+  ```
+
+### 1.7. `POST /api/v1/companies/nao-residente`
+- **Aliases:** `POST /api/v1/empresas/nao-residente`, `POST /api/v1/public/nao-residente`
+- **Descrição:** Cadastro público de autoatendimento para empresas não-residentes (substituição do formulário PDF `dasd.pdf`), dispensando autenticação.
+- **Payload (16 campos, aceita camelCase ou snake_case):**
+  ```json
+  {
+    "razaoSocial": "Empresa Inovadora Ltda",
+    "nomeFantasia": "InovaTech",
+    "cnpj": "12.345.678/0001-90",
+    "emailContato": "contato@empresa.com",
+    "emailCobranca": "financeiro@empresa.com",
+    "telefone": "(49) 99999-0000",
+    "site": "https://empresa.com",
+    "anoFundacao": 2022,
+    "areaAtuacao": "Biotecnologia",
+    "enderecoCompleto": "Rua das Flores, 123, Sala 4",
+    "cidade": "Chapecó",
+    "estado": "SC",
+    "cep": "89800-000",
+    "representanteNome": "Maria Santos",
+    "representanteCpf": "123.456.789-00",
+    "representanteCargo": "Sócia-Diretora",
+    "representanteEndereco": "Rua Central, 456, Chapecó-SC",
+    "representanteEmail": "maria@empresa.com",
+    "representanteTelefone": "(49) 98888-0000"
+  }
+  ```
+- **Regra de Negócio:** Grava com `residente: false`, `tipo: EXTERNA`, `status: EM_ANALISE` e instancia automaticamente o checklist dos 5 signatários oficiais em `assinaturas_contrato`.
 
 ---
 

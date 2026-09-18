@@ -1,7 +1,7 @@
 # Documentação Técnica: Tabela `empresas`
 
 ## 1. Finalidade
-A tabela `empresas` é a entidade central do Sistema Integrado do Pollen Parque. Ela unifica o antigo formulário padrão do Google Drive, as anotações avulsas e a primeira planilha de cadastro em uma única fonte da verdade relacional.
+A tabela `empresas` é a entidade central do Sistema Integrado do Pollen Parque. Ela unifica o antigo formulário padrão do Google Drive, o formulário impresso de autoatendimento (`dasd.pdf`), as anotações avulsas e a primeira planilha de cadastro em uma única fonte da verdade relacional.
 
 ## 2. Estrutura de Colunas
 
@@ -12,11 +12,16 @@ A tabela `empresas` é a entidade central do Sistema Integrado do Pollen Parque.
 | `nome_fantasia` | VARCHAR(255) | NULL | Nome comercial / de marca |
 | `cnpj` | VARCHAR(20) | UNIQUE, NULL | CNPJ formatado ou limpo (apenas empresas nacionais) |
 | `identificador_internacional` | VARCHAR(100) | NULL | Tax ID, EIN, VAT ou registro estrangeiro |
-| `tipo` | VARCHAR(50) | NOT NULL, DEFAULT 'STARTUP' | STARTUP, PME, GRANDE_PORTE, INTERNACIONAL |
+| `tipo` | VARCHAR(50) | NOT NULL, DEFAULT 'STARTUP' | STARTUP, PME, GRANDE_PORTE, INTERNACIONAL, EXTERNA |
+| `residente` | BOOLEAN | DEFAULT TRUE | Define se a empresa é residente física (true) ou externa (false) |
 | `status_alteracao_contratual` | BOOLEAN | DEFAULT FALSE | Flag para empresas de grande porte em alteração societária |
 | `status` | VARCHAR(50) | NOT NULL, DEFAULT 'EM_ANALISE' | Estado no ciclo de vida (EM_ANALISE, MINUTA_GERADA, etc.) |
-| `email_contato` | VARCHAR(255) | NOT NULL | E-mail corporativo principal para notificações |
+| `email_contato` | VARCHAR(255) | NOT NULL | E-mail corporativo principal para notificações e comunicações |
+| `email_cobranca` | VARCHAR(255) | NULL | E-mail financeiro específico para recebimento do boleto da anuidade e NF |
 | `telefone` | VARCHAR(50) | NULL | Telefone com DDD ou DDI (geralmente coletado no WhatsApp inicial) |
+| `site` | VARCHAR(255) | NULL | Site oficial ou link de redes sociais da empresa |
+| `ano_fundacao` | INT | NULL | Ano de fundação da empresa |
+| `area_atuacao` | VARCHAR(150) | NULL | Segmento ou nicho de atuação no mercado |
 | `endereco_completo` | TEXT | NULL | Logradouro, número, complemento e bairro |
 | `cidade` | VARCHAR(100) | NULL | Município sede |
 | `estado` | VARCHAR(50) | NULL | UF ou província |
@@ -24,8 +29,10 @@ A tabela `empresas` é a entidade central do Sistema Integrado do Pollen Parque.
 | `pais` | VARCHAR(100) | DEFAULT 'Brasil' | País sede da empresa |
 | `representante_nome` | VARCHAR(255) | NOT NULL | Nome do signatário legal |
 | `representante_cpf` | VARCHAR(20) | NULL | CPF do representante legal |
+| `representante_cargo` | VARCHAR(150) | NULL | Cargo ou função do representante na empresa |
+| `representante_endereco` | TEXT | NULL | Endereço residencial completo do representante legal |
 | `representante_email` | VARCHAR(255) | NULL | E-mail para envio do termo de assinatura |
-| `representante_telefone` | VARCHAR(50) | NULL | Contato direto do representante |
+| `representante_telefone` | VARCHAR(50) | NULL | Contato direto / WhatsApp do representante |
 | `data_vigencia_inicio` | DATE | NULL | Início oficial do convênio de afiliação |
 | `data_vigencia_fim` | DATE | NULL | Término do convênio de 12 meses (anuidade) |
 | `observacoes` | TEXT | NULL | Notas internas da equipe do programa |
@@ -35,7 +42,7 @@ A tabela `empresas` é a entidade central do Sistema Integrado do Pollen Parque.
 ## 3. Regras de Negócio e Ciclo de Vida
 1. **Unicidade de CNPJ:** Empresas nacionais não podem ter duplicidade de CNPJ cadastrado.
 2. **Empresas Internacionais:** Não exigem CNPJ, mas tornam obrigatório o `identificador_internacional` e o preenchimento do país.
-3. **Fluxo de Estados (`status`):**
+3. **Empresas Não-Residentes (`residente = false`):** Cadastradas com tipo `EXTERNA`. Têm minuta gerada em PDF a partir do modelo DOCX oficial e não alocam postos de coworking permanentes sem solicitação.
+4. **Fluxo de Estados (`status`):**
    `EM_ANALISE` ➡️ `MINUTA_GERADA` ➡️ `EM_ASSINATURA` ➡️ `AGUARDANDO_PAGAMENTO` ➡️ `ATIVO` ➡️ `VENCIDO` (se não renovado) ou `SUSPENSO`/`DESLIGADO`.
-4. **Cálculo de Vigência:** Ao confirmar a assinatura e o pagamento, `data_vigencia_inicio` é preenchida com a data atual e `data_vigencia_fim` é calculada com +365 dias.
-
+5. **Cálculo de Vigência:** Ao confirmar a assinatura e o pagamento, `data_vigencia_inicio` é preenchida com a data atual e `data_vigencia_fim` é calculada com +365 dias.
